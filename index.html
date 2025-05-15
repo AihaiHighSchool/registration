@@ -336,29 +336,26 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
     </select>
   </div>
 
-  <label for="participants">অংশগ্রহণকারীর সংখ্যা:</label>
-  <select name="data[PARTICIPANTS]" id="participants"><option value="">-- নির্বাচন করুন --</option></select>
 
-  <!-- ✅ শিশু প্রশ্ন ও সংখ্যা -->
-  <div id="child-question" style="display:none; margin-top: 20px;">
-    <label>
-      <input type="checkbox" id="has-child"> ৫ বছরের বেশি শিশু আছে?
-    </label>
-  </div>
-
-  <div id="child-count-box" style="display:none; margin-top: 10px;">
-    <label for="child-count">শিশুর সংখ্যা:</label>
-    <select id="child-count" name="data[CHILD]"></select>
-  </div>
-  <!-- নতুন: ৫ বছরের নিচে শিশু -->
-<div id="under5-question" style="display:none; margin-top: 15px;">
-  <label><input type="checkbox" id="has-under5"> ৫ বছরের নিচে শিশু আছে?</label>
+  
+ <!-- ✅ ৫ বছরের বেশি শিশু -->
+<div style="margin-top: 20px;">
+  <label><input type="checkbox" id="has-child"> ৫ বছরের বেশি শিশু আছে?</label>
+</div>
+<div id="child-count-box" style="display:none; margin-top: 10px;">
+  <label for="child-count">শিশুর সংখ্যা:</label>
+  <select id="child-count" name="data[CHILD]"></select>
 </div>
 
+<!-- ✅ ৫ বছরের নিচে শিশু -->
+<div style="margin-top: 15px;">
+  <label><input type="checkbox" id="has-under5"> ৫ বছরের নিচে শিশু আছে?</label>
+</div>
 <div id="under5-box" style="display:none; margin-top: 10px;">
   <label for="under5-count">শিশুর সংখ্যা (৫ বছরের নিচে):</label>
   <select id="under5-count" name="data[UNDER_5_YEAR]"></select>
 </div>
+
 
   <label>মোট চাঁদা (৳):</label>
   <input type="text" id="display_fee" readonly>
@@ -430,7 +427,7 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
 const form = document.getElementById("registration-form");
 const thankYou = document.getElementById("thank-you");
 const sscYear = document.getElementById("ssc_year");
-const participants = document.getElementById("participants");
+
 const feeDisplay = document.getElementById("display_fee");
 const hiddenFee = document.getElementById("total_fee_input");
 
@@ -447,35 +444,8 @@ for (let y = 1995; y <= 2025; y++) {
   let opt = new Option(y, y);
   sscYear.appendChild(opt);
 }
-for (let i = 1; i <= 10; i++) {
-  let opt = new Option(i, i);
-  participants.appendChild(opt);
-}
 
-participants.addEventListener("change", function () {
-  const count = parseInt(participants.value);
-  updateFee();
 
-  if (!isNaN(count) && count > 1) {
-    childQuestion.style.display = "block";
-    hasChildCheckbox.checked = false;
-    childCountBox.style.display = "none";
-    childCountSelect.innerHTML = "";
-
-    under5Question.style.display = "block";
-    under5Checkbox.checked = false;
-    under5Box.style.display = "none";
-    under5Select.innerHTML = "";
-  } else {
-    childQuestion.style.display = "none";
-    childCountBox.style.display = "none";
-    childCountSelect.innerHTML = "";
-
-    under5Question.style.display = "none";
-    under5Box.style.display = "none";
-    under5Select.innerHTML = "";
-  }
-});
 
 hasChildCheckbox.addEventListener("change", function () {
   const total = parseInt(participants.value);
@@ -525,58 +495,46 @@ childCountSelect.addEventListener("change", updateFee);
 sscYear.addEventListener("change", updateFee);
 
 function updateFee() {
-  const year = parseInt(sscYear.value);
-  const totalPeople = parseInt(participants.value);
-  const hasChild = hasChildCheckbox.checked;
+  const year = parseInt(document.getElementById("ssc_year").value);
   const isRunning = document.getElementById("running-student").checked;
-  const childCount = hasChild ? parseInt(childCountSelect.value || "0") : 0;
-  const under5Count = (under5Checkbox.checked && totalPeople > 1) ? parseInt(under5Select.value || "0") : 0;
 
-  if (isNaN(totalPeople) || totalPeople < 1) {
-    feeDisplay.value = "";
-    hiddenFee.value = "";
-    return;
-  }
+  const hasChild = document.getElementById("has-child").checked;
+  const hasUnder5 = document.getElementById("has-under5").checked;
 
-  let payablePeople = totalPeople;
+  const childCount = hasChild ? parseInt(document.getElementById("child-count").value || "0") : 0;
+  const under5Count = hasUnder5 ? parseInt(document.getElementById("under5-count").value || "0") : 0;
 
-  if (totalPeople > 1) {
-    payablePeople -= under5Count;
-  }
-
-  let total = 0;
-
+  let baseFee = 0;
   if (isRunning) {
-    total = payablePeople * 200;
-  } else {
-    if (!isNaN(year)) {
-      let base = 0;
-      if (year >= 1995 && year <= 2016) {
-        base = 400;
-      } else if (year >= 2017 && year <= 2025) {
-        base = 300;
-      }
-
-      if (payablePeople <= 0) {
-        total = 0;
-      } else if (payablePeople === 1) {
-        total = base;
-      } else {
-        const others = payablePeople - 1;
-        const validChildCount = Math.min(childCount, others);
-        const adultCount = others - validChildCount;
-
-        const childFee = validChildCount * 250;
-        const adultFee = adultCount * base;
-
-        total = base + childFee + adultFee;
-      }
+    baseFee = 200;
+  } else if (!isNaN(year)) {
+    if (year >= 1995 && year <= 2016) {
+      baseFee = 400;
+    } else if (year >= 2017 && year <= 2025) {
+      baseFee = 300;
     }
   }
 
-  feeDisplay.value = total;
-  hiddenFee.value = total;
+  const total = baseFee + (childCount * 250);
+
+  // দেখানোর জন্য
+  document.getElementById("display_fee").value = total;
+  document.getElementById("total_fee_input").value = total;
+
+  // গুগল শিটে পাঠানোর জন্য মোট অংশগ্রহণকারী = নিজে + শিশু
+  const totalParticipants = 1 + childCount + under5Count;
+
+  const oldInput = document.querySelector("input[name='data[PARTICIPANTS]']");
+  if (oldInput) oldInput.remove();
+
+  const participantsInput = document.createElement("input");
+  participantsInput.type = "hidden";
+  participantsInput.name = "data[PARTICIPANTS]";
+  participantsInput.value = totalParticipants;
+
+  document.getElementById("registration-form").appendChild(participantsInput);
 }
+
 
 if (localStorage.getItem("formSubmitted")) {
   form.style.display = "none";
@@ -596,9 +554,8 @@ document.getElementById("running-student").addEventListener("change", function (
 
   updateFee();
 });
-
-form.addEventListener("submit", function (e) {
-  e.preventDefault();
+form.onsubmit = async function (e) {
+  e.preventDefault(); // 🔐 ফর্ম সাবমিট আটকানো
   updateFee();
 
   const phone = document.getElementById("phone").value;
@@ -607,22 +564,24 @@ form.addEventListener("submit", function (e) {
 
   if (phone.length !== 11 || !/^\d+$/.test(phone)) {
     alert("সঠিক মোবাইল নাম্বার দিন!");
-    return;
+    return false;
   }
   if (!txn) {
     alert("Transaction ID দিন!");
-    return;
+    return false;
   }
 
   submitBtn.disabled = true;
   submitBtn.value = "Please wait, it's processing...";
 
-  fetch(form.action, {
-    method: "POST",
-    body: new FormData(form)
-  })
-    .then(res => res.json())
-    .then(() => {
+  try {
+    const res = await fetch(form.action, {
+      method: "POST",
+      body: new FormData(form)
+    });
+    const json = await res.json();
+
+    if (json && json.created === 1) {
       localStorage.setItem("formSubmitted", "true");
       form.reset();
       feeDisplay.value = "";
@@ -631,13 +590,19 @@ form.addEventListener("submit", function (e) {
       form.style.display = "none";
       thankYou.style.display = "block";
       window.scrollTo({ top: 0, behavior: "smooth" });
-    })
-    .catch(() => {
-      alert("❌ সাবমিশনে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
-      submitBtn.disabled = false;
-      submitBtn.value = "রেজিস্ট্রেশন করুন";
-    });
-});
+    } else {
+      throw new Error("SheetDB response invalid");
+    }
+
+  } catch (err) {
+    alert("❌ সাবমিশনে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+    submitBtn.disabled = false;
+    submitBtn.value = "রেজিস্ট্রেশন করুন";
+  }
+
+  return false; // ✅ এটা রেখে দিন
+};
+
 
 function handleReset() {
   const pass = document.getElementById("resetPass").value;
@@ -802,51 +767,111 @@ function handleAdminLogin() {
 
     // 🔄 ডেটা লোড করুন
     fetch("https://sheetdb.io/api/v1/7etk4by5v2c7d")
-      .then(res => res.json())
-      .then(data => {
-        let html = "<div style='overflow-x:auto;'><table border='1' cellpadding='6' style='width:100%; border-collapse:collapse; min-width:800px'>";
-        html += "<tr style='background:#f2f2f2'><th>নাম</th><th>ঠিকানা</th><th>SSC</th><th>শ্রেণী</th><th>সংখ্যা</th><th>৫ বছরের বেশি শিশু</th><th>৫ বছরের নিচে শিশু</th><th>মোবাইল</th><th>Txn ID</th><th>মোট</th></tr>";
+  .then(res => res.json())
+  .then(data => {
+    let html = "<div style='overflow-x:auto;'><table border='1' cellpadding='6' style='width:100%; border-collapse:collapse; min-width:800px'>";
+    html += "<tr style='background:#f2f2f2'><th>নাম</th><th>ঠিকানা</th><th>SSC</th><th>শ্রেণী</th><th>সংখ্যা</th><th>৫ বছরের বেশি শিশু</th><th>৫ বছরের নিচে শিশু</th><th>মোবাইল</th><th>Txn ID</th><th>মোট</th></tr>";
 
+    // total child count আর under 5 count শুরু করার জন্য
+    let totalP = 0, totalTaka = 0, totalChild = 0, totalUnder5 = 0;
 
-        let totalP = 0, totalTaka = 0;
+    data.forEach(row => {
+      const participants = parseInt(row.PARTICIPANTS || 0);
+      const totalFee = parseInt(row.TOTAL_FEE || 0);
+      const child = row.CHILD || "০";
+      const under5 = row.UNDER_5_YEAR || "০";
 
-        data.forEach(row => {
-          const participants = parseInt(row.PARTICIPANTS || 0);
-          const totalFee = parseInt(row.TOTAL_FEE || 0);
-          const child = row.CHILD || "০";
-          const under5 = row.UNDER_5_YEAR || "০";
+      // Safely parse integers to avoid NaN
+      const childCount = child && !isNaN(parseInt(child)) ? parseInt(child) : 0;
+      const under5Count = under5 && !isNaN(parseInt(under5)) ? parseInt(under5) : 0;
 
+      html += `<tr>
+        <td>${row.NAME || ''}</td>
+        <td>${row.ADDRESS || ''}</td>
+        <td>${row.SSC_YEAR || ''}</td>
+        <td>${row.CLASS || ''}</td>
+        <td>${participants}</td>
+        <td>${child}</td>
+        <td>${under5}</td>
+        <td>${row.PHONE || ''}</td>
+        <td>${row.TXN_ID || ''}</td>
+        <td>${totalFee}</td>
+      </tr>`;
 
-          html += `<tr>
-            <td>${row.NAME || ''}</td>
-            <td>${row.ADDRESS || ''}</td>
-            <td>${row.SSC_YEAR || ''}</td>
-            <td>${row.CLASS || ''}</td>
-            <td>${participants}</td>
-            <td>${child}</td>
-            <td>${under5}</td>
-            <td>${row.PHONE || ''}</td>
-            <td>${row.TXN_ID || ''}</td>
-            <td>${totalFee}</td>
-          </tr>`;
+      totalP += participants;
+      totalTaka += totalFee;
+      totalChild += childCount;
+      totalUnder5 += under5Count;
+    });
 
-          totalP += participants;
-          totalTaka += totalFee;
-        });
+    html += "</table></div>";
 
-        html += "</table></div>";
+    // এখানে total ৫ বছরের বেশি শিশু এবং নিচের শিশুর হিসাব দেখাবে
+    html += `<div style="text-align:center; color:green; font-weight:bold; margin-top: 10px;">
+               মোট ৫ বছরের বেশি শিশু: ${totalChild} জন<br>
+               মোট ৫ বছরের নিচে শিশু: ${totalUnder5} জন
+             </div>`;
 
-        document.getElementById("admin-table").innerHTML = html;
-        document.getElementById("admin-summary").innerText = `✅ মোট অংশগ্রহণকারী: ${totalP} | মোট টাকা: ${totalTaka}৳`;
-        document.getElementById("admin-panel").style.display = "block";
+    // এরপর মূল summary দিবে মোট অংশগ্রহণকারী এবং মোট টাকা
+    document.getElementById("admin-table").innerHTML = html;
+    document.getElementById("admin-summary").innerHTML = `✅ মোট অংশগ্রহণকারী: ${totalP} | মোট টাকা: ${totalTaka}৳`;
+    document.getElementById("admin-panel").style.display = "block";
 
-        window.scrollTo({ top: document.getElementById("admin-panel").offsetTop, behavior: "smooth" });
-      })
-      .catch(() => alert("❌ ডেটা লোড করতে সমস্যা হয়েছে!"));
+    window.scrollTo({ top: document.getElementById("admin-panel").offsetTop, behavior: "smooth" });
+  })
+  .catch(() => alert("❌ ডেটা লোড করতে সমস্যা হয়েছে!"));
+
   } else {
     alert("❌ ভুল অ্যাডমিন পাসওয়ার্ড!");
   }
 }
+// যখন ৫ বছরের বেশি শিশু চেক করা হবে
+document.getElementById("has-child").addEventListener("change", function () {
+  const box = document.getElementById("child-count-box");
+  const select = document.getElementById("child-count");
+  if (this.checked) {
+    box.style.display = "block";
+    select.innerHTML = "";
+    for (let i = 1; i <= 10; i++) {
+      select.appendChild(new Option(i, i));
+    }
+  } else {
+    box.style.display = "none";
+    select.innerHTML = "";
+  }
+  updateFee();
+});
+
+// যখন ৫ বছরের নিচে শিশু চেক করা হবে
+document.getElementById("has-under5").addEventListener("change", function () {
+  const box = document.getElementById("under5-box");
+  const select = document.getElementById("under5-count");
+  if (this.checked) {
+    box.style.display = "block";
+    select.innerHTML = "";
+    for (let i = 1; i <= 10; i++) {
+      select.appendChild(new Option(i, i));
+    }
+  } else {
+    box.style.display = "none";
+    select.innerHTML = "";
+  }
+  updateFee();
+});
+
+// যখন সংখ্যা পরিবর্তন হবে
+document.getElementById("child-count").addEventListener("change", updateFee);
+document.getElementById("under5-count").addEventListener("change", updateFee);
+
+// ssc সাল বা running student টিক চেক করা হলে
+document.getElementById("ssc_year").addEventListener("change", updateFee);
+document.getElementById("running-student").addEventListener("change", function () {
+  const isRunning = this.checked;
+  document.getElementById("ssc-year-box").style.display = isRunning ? "none" : "block";
+  document.getElementById("class-select-box").style.display = isRunning ? "block" : "none";
+  updateFee();
+});
+
 </script>
 
 
