@@ -9,6 +9,14 @@
 
   <style>
 
+#typed-welcome {
+  font-size: 30px;
+  font-weight: bold;
+  color: #0044cc; /* পরিষ্কার নীল রঙ */
+  text-align: center;
+}
+
+
   body, table, h1, h3, h4, button {
   font-family: 'Noto Sans Bengali', sans-serif;
 }
@@ -117,10 +125,23 @@
       margin-top: 30px;
     }
   </style>
+  <!-- 🎈 Confetti Effect -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<!-- 💬 Typed.js for animated welcome text -->
+<script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+
 </head>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <body>
+
+  <div id="welcome-box" style="position:fixed; top:20%; left:50%; transform:translateX(-50%);
+background:#ffffffdd; padding:20px 30px; border-radius:12px; font-size:24px; z-index:9999; text-align:center;
+box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
+  <span id="typed-welcome"></span>
+</div>
+
 
 <header>
   <img src="https://i.postimg.cc/CM49GHq3/484857702-2892954940878501-1043327302025993468-n.jpg" alt="Logo">
@@ -508,6 +529,40 @@ function generatePDF() {
   }, 1000);
 }
 
+</script>
+
+<script>
+// 🎈 Auto-confetti blast on page load
+window.addEventListener('load', () => {
+  // Show welcome box
+  document.getElementById("welcome-box").style.display = "block";
+
+  // Start confetti
+  confetti({
+    particleCount: 150,
+    spread: 90,
+    origin: { y: 0.6 }
+  });
+
+  // Start typed animation
+  new Typed('#typed-welcome', {
+    strings: [
+      "🎉 স্বাগতম আমাদের রেজিস্ট্রেশন সাইটে!",
+      "🎈 ভালোবাসা ও পুনর্মিলনের প্ল্যাটফর্মে আপনাকে স্বাগতম!",
+      "🚀 একসাথে স্মৃতির যাত্রায় চলুন!",
+      "📋 নিচে ফর্ম পূরণ করুন এখনই..."
+    ],
+    typeSpeed: 40,
+    backSpeed: 20,
+    backDelay: 2000,
+    loop: true
+  });
+
+  // Hide welcome box after 10 seconds
+  setTimeout(() => {
+    document.getElementById("welcome-box").style.display = "none";
+  }, 10000);
+});
 </script>
 
 </body>
