@@ -276,6 +276,19 @@ header {
   vertical-align: middle;
   margin-right: 6px;
 }
+  .confirmed {
+    background-color: #d4edda !important; /* হালকা সবুজ */
+  }
+  .rejected {
+    background-color: #f8d7da !important; /* হালকা লাল */
+  }
+  .confirm-btn, .reject-btn {
+    cursor: pointer;
+    font-size: 18px;
+    border: none;
+    background: transparent;
+    margin: 0 5px;
+  }
 
   </style>
   <!-- 🎈 Confetti Effect -->
@@ -781,70 +794,94 @@ function handleAdminLogin() {
   if (pass === "aihai2025") {
     document.getElementById("adminModal").style.display = "none";
 
-    // 🔄 ডেটা লোড করুন
     fetch("https://sheetdb.io/api/v1/7etk4by5v2c7d")
-  .then(res => res.json())
-  .then(data => {
-    let html = "<div style='overflow-x:auto;'><table border='1' cellpadding='6' style='width:100%; border-collapse:collapse; min-width:800px'>";
-html += "<tr style='background:#f2f2f2'><th>নাম</th><th>ঠিকানা</th><th>SSC</th><th>শ্রেণী</th><th>সংখ্যা</th><th>৫ বছরের বেশি শিশু</th><th>৫ বছরের নিচে শিশু</th><th>মোবাইল</th><th>Cash Out মাধ্যম</th><th>Txn ID</th><th>মোট</th></tr>";
+      .then(res => res.json())
+      .then(data => {
+        let html = "<div style='overflow-x:auto;'><table border='1' cellpadding='6' style='width:100%; border-collapse:collapse; min-width:800px'>";
+        html += "<tr style='background:#f2f2f2'><th>নাম</th><th>ঠিকানা</th><th>SSC</th><th>শ্রেণী</th><th>সংখ্যা</th><th>৫ বছরের বেশি শিশু</th><th>৫ বছরের নিচে শিশু</th><th>মোবাইল</th><th>Cash Out মাধ্যম</th><th>Txn ID</th><th>মোট</th><th>স্টেটাস</th></tr>";
 
-    // total child count আর under 5 count শুরু করার জন্য
-    let totalP = 0, totalTaka = 0, totalChild = 0, totalUnder5 = 0;
+        data.forEach(row => {
+          const participants = parseInt(row.PARTICIPANTS || 0);
+          const totalFee = parseInt(row.TOTAL_FEE || 0);
+          const child = row.CHILD || "০";
+          const under5 = row.UNDER_5_YEAR || "০";
 
-    data.forEach(row => {
-      const participants = parseInt(row.PARTICIPANTS || 0);
-      const totalFee = parseInt(row.TOTAL_FEE || 0);
-      const child = row.CHILD || "০";
-      const under5 = row.UNDER_5_YEAR || "০";
+          const childCount = child && !isNaN(parseInt(child)) ? parseInt(child) : 0;
+          const under5Count = under5 && !isNaN(parseInt(under5)) ? parseInt(under5) : 0;
 
-      // Safely parse integers to avoid NaN
-      const childCount = child && !isNaN(parseInt(child)) ? parseInt(child) : 0;
-      const under5Count = under5 && !isNaN(parseInt(under5)) ? parseInt(under5) : 0;
+          html += `<tr data-id="${row.TXN_ID}">
+            <td>${row.NAME || ''}</td>
+            <td>${row.ADDRESS || ''}</td>
+            <td>${row.SSC_YEAR || ''}</td>
+            <td>${row.CLASS || ''}</td>
+            <td>${participants}</td>
+            <td>${child}</td>
+            <td>${under5}</td>
+            <td>${row.PHONE || ''}</td>
+            <td>${row.CASH_OUT_METHOD || ''}</td>
+            <td>${row.TXN_ID || ''}</td>
+            <td>${totalFee}</td>
+            <td>
+              <button class="confirm-btn">✔️</button>
+              <button class="reject-btn">❌</button>
+            </td>
+          </tr>`;
+        });
 
-html += `<tr>
-  <td>${row.NAME || ''}</td>
-  <td>${row.ADDRESS || ''}</td>
-  <td>${row.SSC_YEAR || ''}</td>
-  <td>${row.CLASS || ''}</td>
-  <td>${participants}</td>
-  <td>${child}</td>
-  <td>${under5}</td>
-  <td>${row.PHONE || ''}</td>
-  <td>${row.CASH_OUT_METHOD || ''}</td> <!-- এখানে যোগ করলাম -->
-  <td>${row.TXN_ID || ''}</td>
-  <td>${totalFee}</td>
-</tr>`;
+        html += "</table></div>";
 
+        html += `<div style="text-align:center; color:green; font-weight:bold; margin-top: 10px;">
+                   মোট ৫ বছরের বেশি শিশু: ${data.reduce((sum, r) => sum + (parseInt(r.CHILD) || 0), 0)} জন<br>
+                   মোট ৫ বছরের নিচে শিশু: ${data.reduce((sum, r) => sum + (parseInt(r.UNDER_5_YEAR) || 0), 0)} জন
+                 </div>`;
 
-      totalP += participants;
-      totalTaka += totalFee;
-      totalChild += childCount;
-      totalUnder5 += under5Count;
-    });
+        // টেবিল HTML সন্নিবেশ করাও
+        document.getElementById("admin-table").innerHTML = html;
 
-    html += "</table></div>";
+        // ইভেন্ট লিসেনার যোগ করো
+        document.querySelectorAll('.confirm-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const tr = this.closest('tr');
+            tr.classList.add('confirmed');
+            tr.classList.remove('rejected');
+            this.style.display = 'inline-block';                    // টিক দেখাবে
+            const rejectBtn = tr.querySelector('.reject-btn');
+            if (rejectBtn) rejectBtn.style.display = 'none';         // ক্রস লুকাবে
+            saveStatus(tr.dataset.id, 'confirmed');
+            updateTotals();
+          });
+        });
 
-    
+        document.querySelectorAll('.reject-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const tr = this.closest('tr');
+            tr.classList.add('rejected');
+            tr.classList.remove('confirmed');
+            this.style.display = 'inline-block';                    // ক্রস দেখাবে
+            const confirmBtn = tr.querySelector('.confirm-btn');
+            if (confirmBtn) confirmBtn.style.display = 'none';       // টিক লুকাবে
+            saveStatus(tr.dataset.id, 'rejected');
+            updateTotals();
+          });
+        });
 
-    // এখানে total ৫ বছরের বেশি শিশু এবং নিচের শিশুর হিসাব দেখাবে
-    html += `<div style="text-align:center; color:green; font-weight:bold; margin-top: 10px;">
-               মোট ৫ বছরের বেশি শিশু: ${totalChild} জন<br>
-               মোট ৫ বছরের নিচে শিশু: ${totalUnder5} জন
-             </div>`;
+        // লোকাল স্টোরেজ থেকে স্টেটাস লোড করে UI আপডেট করো
+        loadStatuses();
 
-    // এরপর মূল summary দিবে মোট অংশগ্রহণকারী এবং মোট টাকা
-    document.getElementById("admin-table").innerHTML = html;
-    document.getElementById("admin-summary").innerHTML = `✅ মোট অংশগ্রহণকারী: ${totalP} | মোট টাকা: ${totalTaka}৳`;
-    document.getElementById("admin-panel").style.display = "block";
+        // প্রথমে মোট আপডেট করো
+        updateTotals();
 
-    window.scrollTo({ top: document.getElementById("admin-panel").offsetTop, behavior: "smooth" });
-  })
-  .catch(() => alert("❌ ডেটা লোড করতে সমস্যা হয়েছে!"));
+        // অ্যাডমিন প্যানেল দেখাও
+        document.getElementById("admin-panel").style.display = "block";
+        window.scrollTo({ top: document.getElementById("admin-panel").offsetTop, behavior: "smooth" });
+      })
+      .catch(() => alert("❌ ডেটা লোড করতে সমস্যা হয়েছে!"));
 
   } else {
     alert("❌ ভুল অ্যাডমিন পাসওয়ার্ড!");
   }
 }
+
 // যখন ৫ বছরের বেশি শিশু চেক করা হবে
 document.getElementById("has-child").addEventListener("change", function () {
   const box = document.getElementById("child-count-box");
@@ -921,7 +958,136 @@ document.getElementById("running-student").addEventListener("change", function (
   });
 </script>
 
+<script>
+document.getElementById("admin-table").innerHTML = html;
+
+// এখানে নিচের ইভেন্ট লিসেনার কোড বসাবে:
+document.querySelectorAll('.confirm-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const tr = this.closest('tr');
+    tr.classList.add('confirmed');
+    tr.classList.remove('rejected');
+    tr.querySelector('.reject-btn').style.display = 'none';  // Cross লুকাবে
+    this.style.display = 'inline-block';                    // Tick দেখাবে
+    saveStatus(tr.dataset.id, 'confirmed');
+    updateTotals();                                          // মোট হিসাব আপডেট করবে
+  });
+});
+
+document.querySelectorAll('.reject-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const tr = this.closest('tr');
+    tr.classList.add('rejected');
+    tr.classList.remove('confirmed');
+    tr.querySelector('.confirm-btn').style.display = 'none'; // Tick লুকাবে
+    this.style.display = 'inline-block';                     // Cross দেখাবে
+    saveStatus(tr.dataset.id, 'rejected');
+    updateTotals();                                           // মোট হিসাব আপডেট করবে
+  });
+});
+
+// লোকালস্টোরেজ থেকে স্টেটাস লোড করো (যখন অ্যাডমিন প্যানেল খোলে)
+loadStatuses();
+updateTotals();
 
 
+// লোকালস্টোরেজে স্টেটাস সেভ করার ফাংশন
+function saveStatus(id, status) {
+  let statusData = JSON.parse(localStorage.getItem('paymentStatus') || '{}');
+  statusData[id] = status;
+  localStorage.setItem('paymentStatus', JSON.stringify(statusData));
+}
+
+// পেজ লোডের সময় লোকালস্টোরেজ থেকে স্টেটাস নিয়ে UI আপডেট
+function loadStatuses() {
+  let statusData = JSON.parse(localStorage.getItem('paymentStatus') || '{}');
+  document.querySelectorAll('#admin-table table tr[data-id]').forEach(tr => {
+    const id = tr.dataset.id;
+    if (statusData[id] === 'confirmed') {
+      tr.classList.add('confirmed');
+      tr.classList.remove('rejected');
+    } else if (statusData[id] === 'rejected') {
+      tr.classList.add('rejected');
+      tr.classList.remove('confirmed');
+    }
+  });
+}
+loadStatuses();
+
+</script>
+<script>
+function saveStatus(id, status) {
+  let statusData = JSON.parse(localStorage.getItem('paymentStatus') || '{}');
+  statusData[id] = status;
+  localStorage.setItem('paymentStatus', JSON.stringify(statusData));
+}
+
+function loadStatuses() {
+  let statusData = JSON.parse(localStorage.getItem('paymentStatus') || '{}');
+  document.querySelectorAll('#admin-table table tr[data-id]').forEach(tr => {
+    const id = tr.dataset.id;
+    const confirmBtn = tr.querySelector('.confirm-btn');
+    const rejectBtn = tr.querySelector('.reject-btn');
+
+    if (statusData[id] === 'confirmed') {
+      tr.classList.add('confirmed');
+      tr.classList.remove('rejected');
+      if (confirmBtn) confirmBtn.style.display = 'inline-block';
+      if (rejectBtn) rejectBtn.style.display = 'none';
+    } else if (statusData[id] === 'rejected') {
+      tr.classList.add('rejected');
+      tr.classList.remove('confirmed');
+      if (confirmBtn) confirmBtn.style.display = 'none';
+      if (rejectBtn) rejectBtn.style.display = 'inline-block';
+    } else {
+      tr.classList.remove('confirmed', 'rejected');
+      if (confirmBtn) confirmBtn.style.display = 'inline-block';
+      if (rejectBtn) rejectBtn.style.display = 'inline-block';
+    }
+  });
+  updateTotals();
+}
+
+function updateTotals() {
+  let statusData = JSON.parse(localStorage.getItem('paymentStatus') || '{}');
+
+  let totalParticipants = 0;
+  let totalFee = 0;
+  let totalChild = 0;
+  let totalUnder5 = 0;
+
+  document.querySelectorAll('#admin-table table tr[data-id]').forEach(tr => {
+    const id = tr.dataset.id;
+    if (statusData[id] === 'confirmed') {
+      const participants = parseInt(tr.children[4].textContent) || 0;
+      const totalFeeRow = parseInt(tr.children[10].textContent) || 0;
+      const child = parseInt(tr.children[5].textContent) || 0;
+      const under5 = parseInt(tr.children[6].textContent) || 0;
+
+      totalParticipants += participants;
+      totalFee += totalFeeRow;
+      totalChild += child;
+      totalUnder5 += under5;
+    }
+  });
+
+  document.getElementById("admin-summary").innerHTML =
+    `✅ মোট অংশগ্রহণকারী: ${totalParticipants} | মোট টাকা: ${totalFee}৳`;
+
+  let extraSummaryDiv = document.querySelector('#admin-panel > div.extra-summary');
+  if (!extraSummaryDiv) {
+    extraSummaryDiv = document.createElement('div');
+    extraSummaryDiv.className = 'extra-summary';
+    extraSummaryDiv.style = "text-align:center; color:green; font-weight:bold; margin-top:10px;";
+    document.getElementById('admin-panel').appendChild(extraSummaryDiv);
+  }
+  extraSummaryDiv.innerHTML = `
+    মোট ৫ বছরের বেশি শিশু: ${totalChild} জন<br>
+    মোট ৫ বছরের নিচে শিশু: ${totalUnder5} জন
+  `;
+}
+
+
+</script>
 </body>
 </html>
