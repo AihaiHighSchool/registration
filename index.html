@@ -271,6 +271,11 @@ header {
   #admin-table table tr {
     page-break-inside: avoid;
   }
+#agent-number img {
+  height: 24px;
+  vertical-align: middle;
+  margin-right: 6px;
+}
 
   </style>
   <!-- 🎈 Confetti Effect -->
@@ -361,16 +366,26 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
   <input type="text" id="display_fee" readonly>
   <input type="hidden" name="data[TOTAL_FEE]" id="total_fee_input">
 
+
+
+<label for="cash_out_method">Cash Out মাধ্যম:</label>
+<select name="data[CASH_OUT_METHOD]" id="cash_out_method" required>
+  <option value="">-- মাধ্যম নির্বাচন করুন --</option>
+  <option value="Bkash">Bkash</option>
+  <option value="Nagad">Nagad</option>
+</select>
+
+<div id="agent-number" style="margin-top: 8px; font-weight: bold; display: none;">
+  <!-- এখানে নম্বর ও লোগো দেখানো হবে -->
+</div>
 <div style="background: #fff8dc; padding: 12px; border-radius: 6px; margin: 20px 0; line-height: 1.8; font-weight: bold;">
   💸 <strong>Cash Out করে Transaction ID লিখুন নিচে:</strong><br><br>
+  </select>
 
-  <img src="https://i.postimg.cc/QxDFmXXf/1.png" alt="Bkash" style="height:24px; vertical-align:middle; margin-right:6px;">
-  Bkash Agent: <span style="color: #3bc4c6;">01794725919</span><br>
-
-  <img src="https://i.postimg.cc/MZVc1c8c/unnamed.png" alt="Nagad" style="height:24px; vertical-align:middle; margin-right:6px;">
-  Nagad Agent: <span style="color: #ff8800;">01794725919</span>
+  <div id="agent-number" style="margin-top: 10px; padding: 8px; background: #ffffe0; border-radius: 6px; font-weight: normal; display: none;">
+    <!-- এখানে লোগো ও নম্বর দেখাবে -->
+  </div>
 </div>
-
 
  <label for="phone">মোবাইল নাম্বার:</label>
 <input type="tel" name="data[PHONE]" id="phone" maxlength="11" required placeholder="যে নাম্বার থেকে Cash Out করেছেন সেটি দিন">
@@ -771,7 +786,7 @@ function handleAdminLogin() {
   .then(res => res.json())
   .then(data => {
     let html = "<div style='overflow-x:auto;'><table border='1' cellpadding='6' style='width:100%; border-collapse:collapse; min-width:800px'>";
-    html += "<tr style='background:#f2f2f2'><th>নাম</th><th>ঠিকানা</th><th>SSC</th><th>শ্রেণী</th><th>সংখ্যা</th><th>৫ বছরের বেশি শিশু</th><th>৫ বছরের নিচে শিশু</th><th>মোবাইল</th><th>Txn ID</th><th>মোট</th></tr>";
+html += "<tr style='background:#f2f2f2'><th>নাম</th><th>ঠিকানা</th><th>SSC</th><th>শ্রেণী</th><th>সংখ্যা</th><th>৫ বছরের বেশি শিশু</th><th>৫ বছরের নিচে শিশু</th><th>মোবাইল</th><th>Cash Out মাধ্যম</th><th>Txn ID</th><th>মোট</th></tr>";
 
     // total child count আর under 5 count শুরু করার জন্য
     let totalP = 0, totalTaka = 0, totalChild = 0, totalUnder5 = 0;
@@ -786,18 +801,20 @@ function handleAdminLogin() {
       const childCount = child && !isNaN(parseInt(child)) ? parseInt(child) : 0;
       const under5Count = under5 && !isNaN(parseInt(under5)) ? parseInt(under5) : 0;
 
-      html += `<tr>
-        <td>${row.NAME || ''}</td>
-        <td>${row.ADDRESS || ''}</td>
-        <td>${row.SSC_YEAR || ''}</td>
-        <td>${row.CLASS || ''}</td>
-        <td>${participants}</td>
-        <td>${child}</td>
-        <td>${under5}</td>
-        <td>${row.PHONE || ''}</td>
-        <td>${row.TXN_ID || ''}</td>
-        <td>${totalFee}</td>
-      </tr>`;
+html += `<tr>
+  <td>${row.NAME || ''}</td>
+  <td>${row.ADDRESS || ''}</td>
+  <td>${row.SSC_YEAR || ''}</td>
+  <td>${row.CLASS || ''}</td>
+  <td>${participants}</td>
+  <td>${child}</td>
+  <td>${under5}</td>
+  <td>${row.PHONE || ''}</td>
+  <td>${row.CASH_OUT_METHOD || ''}</td> <!-- এখানে যোগ করলাম -->
+  <td>${row.TXN_ID || ''}</td>
+  <td>${totalFee}</td>
+</tr>`;
+
 
       totalP += participants;
       totalTaka += totalFee;
@@ -806,6 +823,8 @@ function handleAdminLogin() {
     });
 
     html += "</table></div>";
+
+    
 
     // এখানে total ৫ বছরের বেশি শিশু এবং নিচের শিশুর হিসাব দেখাবে
     html += `<div style="text-align:center; color:green; font-weight:bold; margin-top: 10px;">
@@ -874,6 +893,34 @@ document.getElementById("running-student").addEventListener("change", function (
 });
 
 </script>
+<!-- HTML কোড শেষ -->
+<script>
+  const cashOutSelect = document.getElementById('cash_out_method');
+  const agentNumberDiv = document.getElementById('agent-number');
+
+  const agents = {
+    Bkash: {
+      number: '01794725919',
+      logo: 'https://i.postimg.cc/QxDFmXXf/1.png'
+    },
+    Nagad: {
+      number: '01794725919',
+      logo: 'https://i.postimg.cc/MZVc1c8c/unnamed.png'
+    }
+  };
+
+  cashOutSelect.addEventListener('change', function() {
+    const selected = this.value;
+    if (agents[selected]) {
+      agentNumberDiv.style.display = 'block';
+      agentNumberDiv.innerHTML = `<img src="${agents[selected].logo}" alt="${selected} Logo" style="height:24px; vertical-align:middle; margin-right:6px;"> ${selected} Agent: <span style="color: ${selected === 'Bkash' ? '#3bc4c6' : '#ff8800'};">${agents[selected].number}</span>`;
+    } else {
+      agentNumberDiv.style.display = 'none';
+      agentNumberDiv.innerHTML = '';
+    }
+  });
+</script>
+
 
 
 </body>
