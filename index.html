@@ -4,13 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>আইহাই উচ্চ বিদ্যালয় - রেজিস্ট্রেশন</title>
- <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali&display=swap" rel="stylesheet">
+
 
   <style>
 
   body, table, h1, h3, h4, button {
-    font-family: 'Noto Sans Bengali', sans-serif;
-  }
+  font-family: 'Noto Sans Bengali', sans-serif;
+}
+
 
   body {
     background: url('https://i.postimg.cc/fRNqtVHH/Capture.png') no-repeat center center fixed;
@@ -49,9 +51,13 @@
       width: 100%; padding: 10px; font-size: 16px;
       border: 1px solid #ccc; border-radius: 6px; background: #fff;
     }
-    #phone {
-      background-color: #e6fffa; font-weight: bold;
-    }
+  #phone {
+  background-color: #fff;
+  border: 1px solid #28a745;
+  box-shadow: 0 0 5px rgba(40, 167, 69, 0.2);
+  font-weight: normal;
+}
+
     input[type="submit"] {
       background-color: #28a745; color: white; padding: 12px;
       border: none; border-radius: 6px; cursor: pointer;
@@ -112,6 +118,8 @@
     }
   </style>
 </head>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 <body>
 
 <header>
@@ -153,7 +161,7 @@
   <!-- ✅ শিশু প্রশ্ন ও সংখ্যা -->
   <div id="child-question" style="display:none; margin-top: 20px;">
     <label>
-      <input type="checkbox" id="has-child"> ৩ বছরের বেশি শিশু আছে?
+      <input type="checkbox" id="has-child"> ৫ বছরের বেশি শিশু আছে?
     </label>
   </div>
 
@@ -165,13 +173,20 @@
   <input type="text" id="display_fee" readonly>
   <input type="hidden" name="data[TOTAL_FEE]" id="total_fee_input">
 
-  <div style="background: #fff8dc; padding: 10px; border-radius: 6px; margin: 20px 0;">
-    বিকাশ/নগদ নাম্বারে টাকা পাঠান: <strong>01794725919</strong><br>
-    তারপর নিচে Transaction ID লিখুন:
-  </div>
+<div style="background: #fff8dc; padding: 12px; border-radius: 6px; margin: 20px 0; line-height: 1.8; font-weight: bold;">
+  💸 <strong>Cash Out করে Transaction ID লিখুন নিচে:</strong><br><br>
 
-  <label for="phone">মোবাইল নাম্বার:</label>
-  <input type="tel" name="data[PHONE]" id="phone" maxlength="11" required>
+  <img src="https://i.postimg.cc/QxDFmXXf/1.png" alt="Bkash" style="height:24px; vertical-align:middle; margin-right:6px;">
+  Bkash Agent: 01794725919<br>
+
+  <img src="https://i.postimg.cc/MZVc1c8c/unnamed.png" alt="Nagad" style="height:24px; vertical-align:middle; margin-right:6px;">
+  Nagad Agent: 01765589657
+</div>
+
+
+ <label for="phone">মোবাইল নাম্বার:</label>
+<input type="tel" name="data[PHONE]" id="phone" maxlength="11" required placeholder="যে নাম্বার থেকে Cash Out করেছেন সেটি দিন">
+
 
   <label for="txn_id">Transaction ID:</label>
   <input type="text" name="data[TXN_ID]" id="txn_id" required>
@@ -209,7 +224,7 @@
   <h3 style="text-align:center;">📋 রেজিস্ট্রেশন তালিকা</h3>
   <div id="admin-table" style="overflow-x:auto;"></div>
   <h4 id="admin-summary" style="text-align:center; color:green;"></h4>
-<button onclick="prepareAndDownloadPDF()" style="margin: 20px auto; display: block; background: #dc3545; color: white; font-weight: bold; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">
+<button onclick="generatePDF()" style="margin: 20px auto; display: block; background: #dc3545; color: white; font-weight: bold; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">
   ⬇️ তালিকা PDF হিসেবে ডাউনলোড করুন
 </button>
 
@@ -218,7 +233,7 @@
 
 
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 
 <script>
 const form = document.getElementById("registration-form");
@@ -289,11 +304,11 @@ function updateFee() {
       // SSC পাস করেনি → প্রতিজনের জন্য ২০০ টাকা
       total = totalPeople * 200;
     } else {
-      // SSC পাস করেছে → আগের নিয়ম
+      // SSC পাস করেছে → নিয়ম অনুসারে হিসাব
       if (!isNaN(year)) {
         let base = 0;
         if (year >= 1995 && year <= 2016) {
-          base = 500;
+          base = 400;
         } else if (year >= 2017 && year <= 2025) {
           base = 300;
         }
@@ -302,8 +317,8 @@ function updateFee() {
         const validChildCount = Math.min(childCount, others);
         const adultCount = others - validChildCount;
 
-        const childFee = validChildCount * 300;
-        const adultFee = adultCount * 500;
+        const childFee = validChildCount * 250; // ✅ শিশুদের জন্য ২৫০ টাকা
+        const adultFee = adultCount * base;
 
         total = base + childFee + adultFee;
       }
@@ -340,17 +355,27 @@ document.getElementById("running-student").addEventListener("change", function (
 form.addEventListener("submit", function (e) {
   e.preventDefault();
   updateFee();
+
   const phone = document.getElementById("phone").value;
   const txn = document.getElementById("txn_id").value.trim();
+  const submitBtn = form.querySelector('input[type="submit"]');
+  
   if (phone.length !== 11 || !/^\d+$/.test(phone)) {
-    alert("সঠিক মোবাইল নাম্বার দিন!"); return;
+    alert("সঠিক মোবাইল নাম্বার দিন!");
+    return;
   }
   if (!txn) {
-    alert("Transaction ID দিন!"); return;
+    alert("Transaction ID দিন!");
+    return;
   }
 
+  // ✅ বাটন ডিসেবল এবং টেক্সট চেঞ্জ
+  submitBtn.disabled = true;
+  submitBtn.value = "Please wait, it's processing...";
+
   fetch(form.action, {
-    method: "POST", body: new FormData(form)
+    method: "POST",
+    body: new FormData(form)
   })
   .then(res => res.json())
   .then(() => {
@@ -358,24 +383,31 @@ form.addEventListener("submit", function (e) {
     form.reset();
     form.style.display = "none";
     thankYou.style.display = "block";
-    window.scrollTo({top: 0, behavior: "smooth"});
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  })
+  .catch(() => {
+    alert("❌ সাবমিশনে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+    // ✅ সমস্যা হলে বাটন আবার আগের মতো করা হবে
+    submitBtn.disabled = false;
+    submitBtn.value = "রেজিস্ট্রেশন করুন";
   });
 });
 
+
 function handleReset() {
   const pass = document.getElementById("resetPass").value;
-  if (pass === "reset2025") {
+  if (pass === "1234") {
     localStorage.removeItem("formSubmitted");
-    alert("✅ পুনরায় চালু হয়েছে");
-    location.reload();
+    location.reload(); // সরাসরি রিলোড, কোনো alert নাই
   } else {
     alert("❌ ভুল পাসওয়ার্ড!");
   }
 }
 
+
 function handleAdminLogin() {
   const val = document.getElementById("adminPass").value;
-  if (val === "eid1221") {
+  if (val === "aihai2025") {
     fetch("https://sheetdb.io/api/v1/7etk4by5v2c7d")
       .then(res => res.json())
       .then(data => {
@@ -419,22 +451,64 @@ function handleAdminLogin() {
 }
 </script>
 <script>
-function prepareAndDownloadPDF() {
+function generatePDF() {
   const panel = document.getElementById("admin-panel");
+
+  // Step 1: scroll so it's visible
   panel.scrollIntoView({ behavior: 'smooth' });
+
+  // Step 2: wait for render
+  setTimeout(() => {
+    // Optional: force visible
+    panel.style.display = "block";
+
+    const opt = {
+      margin: 0.5,
+      filename: 'registration_list.pdf',
+      image: { type: 'jpeg', quality: 1 },
+      html2canvas: {
+        scale: 3,
+        useCORS: true,
+        scrollY: 0
+      },
+      jsPDF: { unit: 'in', format: 'A4', orientation: 'portrait' }
+    };
+
+    html2pdf().from(panel).set(opt).save();
+  }, 1200);
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+
+<script>
+function generatePDF() {
+  const content = document.getElementById("pdf-content");
+  document.getElementById("admin-panel").style.display = "block";
+  content.scrollIntoView({ behavior: 'smooth' });
 
   setTimeout(() => {
     const opt = {
       margin: 0.5,
       filename: 'registration_list.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'in', format: 'A4', orientation: 'portrait' }
+      image: { type: 'jpeg', quality: 1 },
+      html2canvas: {
+        scale: 3,
+        useCORS: true,
+        scrollY: 0
+      },
+      jsPDF: {
+        unit: 'in',
+        format: 'a4',
+        orientation: 'landscape'
+      }
     };
 
-    html2pdf().from(panel).set(opt).save();
+    html2pdf().from(content).set(opt).save();
   }, 1000);
 }
+
 </script>
+
 </body>
 </html>
