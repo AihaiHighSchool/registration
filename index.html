@@ -223,6 +223,52 @@ header {
     transform: translateX(-50%);
   }
 }
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+.raindrop {
+  position: fixed;
+  top: -20px;
+  width: 2px;
+  height: 15px;
+  background: rgba(0, 136, 255, 0.6);
+  animation: fall linear;
+  z-index: 999;
+  pointer-events: none;
+}
+
+@keyframes fall {
+  to {
+    transform: translateY(110vh);
+    opacity: 0;
+  }
+}
+.bubble {
+  position: fixed;
+  bottom: -50px;
+  width: 20px;
+  height: 20px;
+  background: rgba(173, 216, 230, 0.4); /* হালকা নীল বুদবুদ */
+  border-radius: 50%;
+  animation: floatUp linear;
+  z-index: 0;
+  pointer-events: none;
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-120vh) scale(1.5);
+    opacity: 0;
+  }
+}
+
 
   </style>
   <!-- 🎈 Confetti Effect -->
@@ -357,7 +403,7 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
   <h3 style="text-align:center;">📋 রেজিস্ট্রেশন তালিকা</h3>
   <div id="admin-table" style="overflow-x:auto;"></div>
   <h4 id="admin-summary" style="text-align:center; color:green;"></h4>
-<button onclick="generatePDF()" style="margin: 20px auto; display: block; background: #dc3545; color: white; font-weight: bold; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">
+<button onclick="generatePDF()" class="no-print" style="margin: 20px auto; display: block; background: #dc3545; color: white; font-weight: bold; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">
   ⬇️ তালিকা PDF হিসেবে ডাউনলোড করুন
 </button>
 
@@ -586,62 +632,64 @@ function handleAdminLogin() {
 <script>
 function generatePDF() {
   const panel = document.getElementById("admin-panel");
+  const downloadBtn = panel.querySelector(".no-print"); // 🎯 খালি এই বাটন লুকানো হবে
 
-  // Step 1: scroll so it's visible
-  panel.scrollIntoView({ behavior: 'smooth' });
+  // 🔒 বাটন লুকান (PDF বানানোর সময়)
+  if (downloadBtn) downloadBtn.style.display = "none";
 
-  // Step 2: wait for render
-  setTimeout(() => {
-    // Optional: force visible
-    panel.style.display = "block";
+  const opt = {
+    margin: 0.5,
+    filename: 'registration_list.pdf',
+    image: { type: 'jpeg', quality: 1 },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      scrollY: 0
+    },
+    jsPDF: { unit: 'in', format: 'A4', orientation: 'landscape' }
+  };
 
-    const opt = {
-      margin: 0.5,
-      filename: 'registration_list.pdf',
-      image: { type: 'jpeg', quality: 1 },
-      html2canvas: {
-        scale: 3,
-        useCORS: true,
-        scrollY: 0
-      },
-      jsPDF: { unit: 'in', format: 'A4', orientation: 'portrait' }
-    };
-
-    html2pdf().from(panel).set(opt).save();
-  }, 1200);
+  // 📄 PDF তৈরি করুন
+  html2pdf().set(opt).from(panel).save().then(() => {
+    // ✅ কাজ শেষে বাটন আবার দেখান
+    if (downloadBtn) downloadBtn.style.display = "block";
+  });
 }
 </script>
+
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 
 <script>
 function generatePDF() {
-  const content = document.getElementById("pdf-content");
-  document.getElementById("admin-panel").style.display = "block";
-  content.scrollIntoView({ behavior: 'smooth' });
+  const panel = document.getElementById("admin-panel");
+  const downloadBtn = panel.querySelector(".no-print"); // 🎯 শুধু এই বাটন লুকানো হবে
 
-  setTimeout(() => {
-    const opt = {
-      margin: 0.5,
-      filename: 'registration_list.pdf',
-      image: { type: 'jpeg', quality: 1 },
-      html2canvas: {
-        scale: 3,
-        useCORS: true,
-        scrollY: 0
-      },
-      jsPDF: {
-        unit: 'in',
-        format: 'a4',
-        orientation: 'landscape'
-      }
-    };
+  // 🔒 PDF বানানোর আগে বাটন লুকান
+  if (downloadBtn) downloadBtn.style.display = "none";
 
-    html2pdf().from(content).set(opt).save();
-  }, 1000);
+  const opt = {
+    margin: 0.5,
+    filename: 'registration_list.pdf',
+    image: { type: 'jpeg', quality: 1 },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      scrollY: 0
+    },
+    jsPDF: { unit: 'in', format: 'A4', orientation: 'landscape' }
+  };
+
+  // 📄 PDF তৈরি করুন
+  html2pdf().set(opt).from(panel).save().then(() => {
+    // ✅ কাজ শেষ হলে বাটন আবার দেখান
+    if (downloadBtn) downloadBtn.style.display = "block";
+  });
 }
-
 </script>
+
+
 <script>
 window.addEventListener('load', () => {
   const welcomeBox = document.getElementById("welcome-box");
@@ -672,6 +720,52 @@ window.addEventListener('load', () => {
     welcomeBox.style.display = "none";
   }, 7000);
 });
+</script>
+
+<script>
+function createRainDrop() {
+  const drop = document.createElement("div");
+  drop.classList.add("raindrop");
+
+  drop.style.left = Math.random() * window.innerWidth + "px";
+  drop.style.animationDuration = (0.5 + Math.random() * 1.5) + "s";
+
+  document.body.appendChild(drop);
+
+  setTimeout(() => {
+    drop.remove();
+  }, 2000);
+}
+
+// ⏱️ প্রতি 100ms এ বৃষ্টি তৈরি হবে
+setInterval(createRainDrop, 100);
+</script>
+<script>
+function createBubble() {
+  const bubble = document.createElement("div");
+  bubble.classList.add("bubble");
+
+  // র‍্যান্ডম horizontal অবস্থান
+  bubble.style.left = Math.random() * window.innerWidth + "px";
+
+  // র‍্যান্ডম আকার
+  const size = Math.random() * 20 + 10; // 10px to 30px
+  bubble.style.width = size + "px";
+  bubble.style.height = size + "px";
+
+  // র‍্যান্ডম animation duration
+  bubble.style.animationDuration = (3 + Math.random() * 4) + "s";
+
+  document.body.appendChild(bubble);
+
+  // কিছু সময় পর বুদবুদ মুছে ফেলুন
+  setTimeout(() => {
+    bubble.remove();
+  }, 7000);
+}
+
+// চিরকাল চলবে
+setInterval(createBubble, 300);
 </script>
 
 
