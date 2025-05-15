@@ -11,10 +11,13 @@
 
 #typed-welcome {
   font-size: 30px;
-  font-weight: bold;
-  color: #0044cc; /* পরিষ্কার নীল রঙ */
+  font-weight: 600;
+  background: linear-gradient(90deg, rgba(0, 153, 255, 0.9), rgba(0, 51, 204, 0.9));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   text-align: center;
 }
+
 
 
   body, table, h1, h3, h4, button {
@@ -136,7 +139,7 @@
 
 <body>
 
-  <div id="welcome-box" style="position:fixed; top:20%; left:50%; transform:translateX(-50%);
+<div id="welcome-box" style="position:fixed; top:20%; left:50%; transform:translateX(-50%);
 background:#ffffffdd; padding:20px 30px; border-radius:12px; font-size:24px; z-index:9999; text-align:center;
 box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
   <span id="typed-welcome"></span>
@@ -530,24 +533,21 @@ function generatePDF() {
 }
 
 </script>
-
 <script>
-// 🎈 Auto-confetti blast on page load
 window.addEventListener('load', () => {
-  // Show welcome box
-  document.getElementById("welcome-box").style.display = "block";
+  const welcomeBox = document.getElementById("welcome-box");
+  welcomeBox.style.display = "block";
 
-  // Start confetti
+  // 🎈 Confetti effect (একবার blast)
   confetti({
     particleCount: 150,
-    spread: 90,
+    spread: 100,
     origin: { y: 0.6 }
   });
 
-  // Start typed animation
+  // 💬 Typed.js animation
   new Typed('#typed-welcome', {
     strings: [
-      "🎉 স্বাগতম আমাদের রেজিস্ট্রেশন সাইটে!",
       "🎈 ভালোবাসা ও পুনর্মিলনের প্ল্যাটফর্মে আপনাকে স্বাগতম!",
       "🚀 একসাথে স্মৃতির যাত্রায় চলুন!",
       "📋 নিচে ফর্ম পূরণ করুন এখনই..."
@@ -558,12 +558,14 @@ window.addEventListener('load', () => {
     loop: true
   });
 
-  // Hide welcome box after 10 seconds
+  // ১০ সেকেন্ড পর হাইড হয়ে যাবে
   setTimeout(() => {
-    document.getElementById("welcome-box").style.display = "none";
+    welcomeBox.style.display = "none";
   }, 10000);
 });
 </script>
+
+
 
 </body>
 </html>
