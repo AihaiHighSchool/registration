@@ -797,6 +797,8 @@ function handleAdminLogin() {
     fetch("https://sheetdb.io/api/v1/7etk4by5v2c7d")
       .then(res => res.json())
       .then(data => {
+        console.log(data); // ডেটা কনসোলে দেখাবে, নিশ্চিত হওয়ায়
+
         let html = "<div style='overflow-x:auto;'><table border='1' cellpadding='6' style='width:100%; border-collapse:collapse; min-width:800px'>";
         html += "<tr style='background:#f2f2f2'><th>নাম</th><th>ঠিকানা</th><th>SSC</th><th>শ্রেণী</th><th>সংখ্যা</th><th>৫ বছরের বেশি শিশু</th><th>৫ বছরের নিচে শিশু</th><th>মোবাইল</th><th>Cash Out মাধ্যম</th><th>Txn ID</th><th>মোট</th><th>স্টেটাস</th></tr>";
 
@@ -805,9 +807,6 @@ function handleAdminLogin() {
           const totalFee = parseInt(row.TOTAL_FEE || 0);
           const child = row.CHILD || "০";
           const under5 = row.UNDER_5_YEAR || "০";
-
-          const childCount = child && !isNaN(parseInt(child)) ? parseInt(child) : 0;
-          const under5Count = under5 && !isNaN(parseInt(under5)) ? parseInt(under5) : 0;
 
           html += `<tr data-id="${row.TXN_ID}">
             <td>${row.NAME || ''}</td>
@@ -830,48 +829,12 @@ function handleAdminLogin() {
 
         html += "</table></div>";
 
-        html += `<div style="text-align:center; color:green; font-weight:bold; margin-top: 10px;">
-                   মোট ৫ বছরের বেশি শিশু: ${data.reduce((sum, r) => sum + (parseInt(r.CHILD) || 0), 0)} জন<br>
-                   মোট ৫ বছরের নিচে শিশু: ${data.reduce((sum, r) => sum + (parseInt(r.UNDER_5_YEAR) || 0), 0)} জন
-                 </div>`;
-
-        // টেবিল HTML সন্নিবেশ করাও
         document.getElementById("admin-table").innerHTML = html;
 
-        // ইভেন্ট লিসেনার যোগ করো
-        document.querySelectorAll('.confirm-btn').forEach(btn => {
-          btn.addEventListener('click', function() {
-            const tr = this.closest('tr');
-            tr.classList.add('confirmed');
-            tr.classList.remove('rejected');
-            this.style.display = 'inline-block';                    // টিক দেখাবে
-            const rejectBtn = tr.querySelector('.reject-btn');
-            if (rejectBtn) rejectBtn.style.display = 'none';         // ক্রস লুকাবে
-            saveStatus(tr.dataset.id, 'confirmed');
-            updateTotals();
-          });
-        });
-
-        document.querySelectorAll('.reject-btn').forEach(btn => {
-          btn.addEventListener('click', function() {
-            const tr = this.closest('tr');
-            tr.classList.add('rejected');
-            tr.classList.remove('confirmed');
-            this.style.display = 'inline-block';                    // ক্রস দেখাবে
-            const confirmBtn = tr.querySelector('.confirm-btn');
-            if (confirmBtn) confirmBtn.style.display = 'none';       // টিক লুকাবে
-            saveStatus(tr.dataset.id, 'rejected');
-            updateTotals();
-          });
-        });
-
-        // লোকাল স্টোরেজ থেকে স্টেটাস লোড করে UI আপডেট করো
+        setupStatusButtons();
         loadStatuses();
-
-        // প্রথমে মোট আপডেট করো
         updateTotals();
 
-        // অ্যাডমিন প্যানেল দেখাও
         document.getElementById("admin-panel").style.display = "block";
         window.scrollTo({ top: document.getElementById("admin-panel").offsetTop, behavior: "smooth" });
       })
@@ -881,6 +844,7 @@ function handleAdminLogin() {
     alert("❌ ভুল অ্যাডমিন পাসওয়ার্ড!");
   }
 }
+
 
 // যখন ৫ বছরের বেশি শিশু চেক করা হবে
 document.getElementById("has-child").addEventListener("change", function () {
@@ -959,37 +923,6 @@ document.getElementById("running-student").addEventListener("change", function (
 </script>
 
 <script>
-document.getElementById("admin-table").innerHTML = html;
-
-// এখানে নিচের ইভেন্ট লিসেনার কোড বসাবে:
-document.querySelectorAll('.confirm-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
-    const tr = this.closest('tr');
-    tr.classList.add('confirmed');
-    tr.classList.remove('rejected');
-    tr.querySelector('.reject-btn').style.display = 'none';  // Cross লুকাবে
-    this.style.display = 'inline-block';                    // Tick দেখাবে
-    saveStatus(tr.dataset.id, 'confirmed');
-    updateTotals();                                          // মোট হিসাব আপডেট করবে
-  });
-});
-
-document.querySelectorAll('.reject-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
-    const tr = this.closest('tr');
-    tr.classList.add('rejected');
-    tr.classList.remove('confirmed');
-    tr.querySelector('.confirm-btn').style.display = 'none'; // Tick লুকাবে
-    this.style.display = 'inline-block';                     // Cross দেখাবে
-    saveStatus(tr.dataset.id, 'rejected');
-    updateTotals();                                           // মোট হিসাব আপডেট করবে
-  });
-});
-
-// লোকালস্টোরেজ থেকে স্টেটাস লোড করো (যখন অ্যাডমিন প্যানেল খোলে)
-loadStatuses();
-updateTotals();
-
 
 // লোকালস্টোরেজে স্টেটাস সেভ করার ফাংশন
 function saveStatus(id, status) {
@@ -999,23 +932,11 @@ function saveStatus(id, status) {
 }
 
 // পেজ লোডের সময় লোকালস্টোরেজ থেকে স্টেটাস নিয়ে UI আপডেট
-function loadStatuses() {
-  let statusData = JSON.parse(localStorage.getItem('paymentStatus') || '{}');
-  document.querySelectorAll('#admin-table table tr[data-id]').forEach(tr => {
-    const id = tr.dataset.id;
-    if (statusData[id] === 'confirmed') {
-      tr.classList.add('confirmed');
-      tr.classList.remove('rejected');
-    } else if (statusData[id] === 'rejected') {
-      tr.classList.add('rejected');
-      tr.classList.remove('confirmed');
-    }
-  });
-}
-loadStatuses();
+
 
 </script>
 <script>
+// লোকালস্টোরেজে স্টেটাস সেভ করার ফাংশন
 function saveStatus(id, status) {
   let statusData = JSON.parse(localStorage.getItem('paymentStatus') || '{}');
   statusData[id] = status;
@@ -1045,8 +966,8 @@ function loadStatuses() {
       if (rejectBtn) rejectBtn.style.display = 'inline-block';
     }
   });
-  updateTotals();
 }
+
 
 function updateTotals() {
   let statusData = JSON.parse(localStorage.getItem('paymentStatus') || '{}');
@@ -1087,6 +1008,37 @@ function updateTotals() {
   `;
 }
 
+function setupStatusButtons() {
+  document.querySelectorAll('.confirm-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const tr = this.closest('tr');
+      tr.classList.add('confirmed');
+      tr.classList.remove('rejected');
+
+      this.style.display = 'inline-block';
+      const rejectBtn = tr.querySelector('.reject-btn');
+      if (rejectBtn) rejectBtn.style.display = 'none';
+
+      saveStatus(tr.dataset.id, 'confirmed');
+      updateTotals();
+    });
+  });
+
+  document.querySelectorAll('.reject-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const tr = this.closest('tr');
+      tr.classList.add('rejected');
+      tr.classList.remove('confirmed');
+
+      this.style.display = 'inline-block';
+      const confirmBtn = tr.querySelector('.confirm-btn');
+      if (confirmBtn) confirmBtn.style.display = 'none';
+
+      saveStatus(tr.dataset.id, 'rejected');
+      updateTotals();
+    });
+  });
+}
 
 </script>
 </body>
