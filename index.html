@@ -127,6 +127,40 @@
       cursor: pointer;
       margin-top: 30px;
     }
+    .light-border {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  box-shadow:
+    0 0 20px 5px rgba(255, 0, 0, 0.5),
+    0 0 30px 10px rgba(0, 255, 0, 0.5),
+    0 0 40px 15px rgba(0, 0, 255, 0.5);
+  z-index: 9998;
+  animation: neonPulse 3s infinite alternate;
+  border: 5px solid transparent;
+  box-sizing: border-box;
+  border-image: linear-gradient(45deg, red, yellow, lime, cyan, blue, magenta, red) 1;
+  border-image-slice: 1;
+}
+
+@keyframes neonPulse {
+  0% {
+    box-shadow:
+      0 0 20px 5px rgba(255, 0, 0, 0.5),
+      0 0 30px 10px rgba(0, 255, 0, 0.5),
+      0 0 40px 15px rgba(0, 0, 255, 0.5);
+  }
+  100% {
+    box-shadow:
+      0 0 30px 10px rgba(255, 255, 0, 0.7),
+      0 0 40px 15px rgba(255, 0, 255, 0.7),
+      0 0 50px 20px rgba(0, 255, 255, 0.7);
+  }
+}
+
   </style>
   <!-- 🎈 Confetti Effect -->
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -138,6 +172,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <body>
+  <div class="light-border"></div>
+
 
 <div id="welcome-box" style="position:fixed; top:20%; left:50%; transform:translateX(-50%);
 background:#ffffffdd; padding:20px 30px; border-radius:12px; font-size:24px; z-index:9999; text-align:center;
