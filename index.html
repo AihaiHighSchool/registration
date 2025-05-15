@@ -268,7 +268,9 @@ header {
     opacity: 0;
   }
 }
-
+  #admin-table table tr {
+    page-break-inside: avoid;
+  }
 
   </style>
   <!-- 🎈 Confetti Effect -->
@@ -653,13 +655,12 @@ function handleReset() {
 <script>
 function generatePDF() {
   const panel = document.getElementById("admin-panel");
-  const downloadBtn = panel.querySelector(".no-print"); // 🎯 খালি এই বাটন লুকানো হবে
+  const downloadBtn = panel.querySelector(".no-print");
 
-  // 🔒 বাটন লুকান (PDF বানানোর সময়)
   if (downloadBtn) downloadBtn.style.display = "none";
 
   const opt = {
-    margin: 0.5,
+    margin: [0.2, 0.2, 0.2, 0.2], // Top, Right, Bottom, Left
     filename: 'registration_list.pdf',
     image: { type: 'jpeg', quality: 1 },
     html2canvas: {
@@ -667,16 +668,20 @@ function generatePDF() {
       useCORS: true,
       scrollY: 0
     },
-    jsPDF: { unit: 'in', format: 'A4', orientation: 'landscape' }
+    jsPDF: {
+      unit: 'in',
+      format: 'a4',
+      orientation: 'landscape'
+    },
+    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
   };
 
-  // 📄 PDF তৈরি করুন
   html2pdf().set(opt).from(panel).save().then(() => {
-    // ✅ কাজ শেষে বাটন আবার দেখান
     if (downloadBtn) downloadBtn.style.display = "block";
   });
 }
 </script>
+
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
