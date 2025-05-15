@@ -348,6 +348,16 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
     <label for="child-count">শিশুর সংখ্যা:</label>
     <select id="child-count" name="data[CHILD]"></select>
   </div>
+  <!-- নতুন: ৫ বছরের নিচে শিশু -->
+<div id="under5-question" style="display:none; margin-top: 15px;">
+  <label><input type="checkbox" id="has-under5"> ৫ বছরের নিচে শিশু আছে?</label>
+</div>
+
+<div id="under5-box" style="display:none; margin-top: 10px;">
+  <label for="under5-count">শিশুর সংখ্যা (৫ বছরের নিচে):</label>
+  <select id="under5-count" name="data[UNDER_5_YEAR]"></select>
+</div>
+
   <label>মোট চাঁদা (৳):</label>
   <input type="text" id="display_fee" readonly>
   <input type="hidden" name="data[TOTAL_FEE]" id="total_fee_input">
@@ -356,10 +366,10 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
   💸 <strong>Cash Out করে Transaction ID লিখুন নিচে:</strong><br><br>
 
   <img src="https://i.postimg.cc/QxDFmXXf/1.png" alt="Bkash" style="height:24px; vertical-align:middle; margin-right:6px;">
-  Bkash Agent: 01794725919<br>
+  Bkash Agent: <span style="color: #3bc4c6;">01794725919</span><br>
 
   <img src="https://i.postimg.cc/MZVc1c8c/unnamed.png" alt="Nagad" style="height:24px; vertical-align:middle; margin-right:6px;">
-  Nagad Agent: 01794725919
+  Nagad Agent: <span style="color: #ff8800;">01794725919</span>
 </div>
 
 
@@ -426,26 +436,42 @@ const hasChildCheckbox = document.getElementById("has-child");
 const childQuestion = document.getElementById("child-question");
 const childCountBox = document.getElementById("child-count-box");
 const childCountSelect = document.getElementById("child-count");
+const under5Question = document.getElementById("under5-question");
+const under5Checkbox = document.getElementById("has-under5");
+const under5Box = document.getElementById("under5-box");
+let under5Select = document.getElementById("under5-count");
 
 for (let y = 1995; y <= 2025; y++) {
-  let opt = new Option(y, y); sscYear.appendChild(opt);
+  let opt = new Option(y, y);
+  sscYear.appendChild(opt);
 }
 for (let i = 1; i <= 10; i++) {
-  let opt = new Option(i, i); participants.appendChild(opt);
+  let opt = new Option(i, i);
+  participants.appendChild(opt);
 }
 
 participants.addEventListener("change", function () {
   const count = parseInt(participants.value);
   updateFee();
+
   if (!isNaN(count) && count > 1) {
     childQuestion.style.display = "block";
     hasChildCheckbox.checked = false;
     childCountBox.style.display = "none";
     childCountSelect.innerHTML = "";
+
+    under5Question.style.display = "block";
+    under5Checkbox.checked = false;
+    under5Box.style.display = "none";
+    under5Select.innerHTML = "";
   } else {
     childQuestion.style.display = "none";
     childCountBox.style.display = "none";
     childCountSelect.innerHTML = "";
+
+    under5Question.style.display = "none";
+    under5Box.style.display = "none";
+    under5Select.innerHTML = "";
   }
 });
 
@@ -466,6 +492,33 @@ hasChildCheckbox.addEventListener("change", function () {
   updateFee();
 });
 
+under5Checkbox.addEventListener("change", function () {
+  const total = parseInt(participants.value);
+
+  if (this.checked && !isNaN(total) && total > 1) {
+    const maxUnder5 = total - 1;
+    under5Box.style.display = "block";
+    under5Select.innerHTML = "";
+
+    for (let i = 1; i <= maxUnder5; i++) {
+      const opt = new Option(i, i);
+      under5Select.appendChild(opt);
+    }
+
+    under5Select.addEventListener("change", updateFee);
+    updateFee();
+  } else {
+    under5Box.style.display = "none";
+
+    // ✅ clone করে পুরাতন ইভেন্ট listener সরানো হচ্ছে
+    const newSelect = under5Select.cloneNode(true);
+    under5Select.parentNode.replaceChild(newSelect, under5Select);
+    under5Select = newSelect;
+
+    updateFee();
+  }
+});
+
 childCountSelect.addEventListener("change", updateFee);
 sscYear.addEventListener("change", updateFee);
 
@@ -475,39 +528,53 @@ function updateFee() {
   const hasChild = hasChildCheckbox.checked;
   const isRunning = document.getElementById("running-student").checked;
   const childCount = hasChild ? parseInt(childCountSelect.value || "0") : 0;
+  const under5Count = (under5Checkbox.checked && totalPeople > 1) ? parseInt(under5Select.value || "0") : 0;
 
-  if (!isNaN(totalPeople) && totalPeople >= 1) {
-    let total = 0;
+  if (isNaN(totalPeople) || totalPeople < 1) {
+    feeDisplay.value = "";
+    hiddenFee.value = "";
+    return;
+  }
 
-    if (isRunning) {
-      // SSC পাস করেনি → প্রতিজনের জন্য ২০০ টাকা
-      total = totalPeople * 200;
-    } else {
-      // SSC পাস করেছে → নিয়ম অনুসারে হিসাব
-      if (!isNaN(year)) {
-        let base = 0;
-        if (year >= 1995 && year <= 2016) {
-          base = 400;
-        } else if (year >= 2017 && year <= 2025) {
-          base = 300;
-        }
+  let payablePeople = totalPeople;
 
-        const others = totalPeople - 1;
+  if (totalPeople > 1) {
+    payablePeople -= under5Count;
+  }
+
+  let total = 0;
+
+  if (isRunning) {
+    total = payablePeople * 200;
+  } else {
+    if (!isNaN(year)) {
+      let base = 0;
+      if (year >= 1995 && year <= 2016) {
+        base = 400;
+      } else if (year >= 2017 && year <= 2025) {
+        base = 300;
+      }
+
+      if (payablePeople <= 0) {
+        total = 0;
+      } else if (payablePeople === 1) {
+        total = base;
+      } else {
+        const others = payablePeople - 1;
         const validChildCount = Math.min(childCount, others);
         const adultCount = others - validChildCount;
 
-        const childFee = validChildCount * 250; // ✅ শিশুদের জন্য ২৫০ টাকা
+        const childFee = validChildCount * 250;
         const adultFee = adultCount * base;
 
         total = base + childFee + adultFee;
       }
     }
-
-    feeDisplay.value = total;
-    hiddenFee.value = total;
   }
-}
 
+  feeDisplay.value = total;
+  hiddenFee.value = total;
+}
 
 if (localStorage.getItem("formSubmitted")) {
   form.style.display = "none";
@@ -519,16 +586,13 @@ document.getElementById("running-student").addEventListener("change", function (
   document.getElementById("ssc-year-box").style.display = isRunning ? "none" : "block";
   document.getElementById("class-select-box").style.display = isRunning ? "block" : "none";
 
-  // ✅ শিশু অপশন হাইড করো যদি SSC পাস না করে
   if (isRunning) {
     childQuestion.style.display = "none";
     childCountBox.style.display = "none";
     childCountSelect.innerHTML = "";
-  } else {
-    updateFee();
   }
 
-  updateFee(); // ensure amount is recalculated
+  updateFee();
 });
 
 form.addEventListener("submit", function (e) {
@@ -538,7 +602,7 @@ form.addEventListener("submit", function (e) {
   const phone = document.getElementById("phone").value;
   const txn = document.getElementById("txn_id").value.trim();
   const submitBtn = form.querySelector('input[type="submit"]');
-  
+
   if (phone.length !== 11 || !/^\d+$/.test(phone)) {
     alert("সঠিক মোবাইল নাম্বার দিন!");
     return;
@@ -548,7 +612,6 @@ form.addEventListener("submit", function (e) {
     return;
   }
 
-  // ✅ বাটন ডিসেবল এবং টেক্সট চেঞ্জ
   submitBtn.disabled = true;
   submitBtn.value = "Please wait, it's processing...";
 
@@ -556,79 +619,37 @@ form.addEventListener("submit", function (e) {
     method: "POST",
     body: new FormData(form)
   })
-  .then(res => res.json())
-  .then(() => {
-    localStorage.setItem("formSubmitted", "true");
-    form.reset();
-    form.style.display = "none";
-    thankYou.style.display = "block";
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  })
-  .catch(() => {
-    alert("❌ সাবমিশনে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
-    // ✅ সমস্যা হলে বাটন আবার আগের মতো করা হবে
-    submitBtn.disabled = false;
-    submitBtn.value = "রেজিস্ট্রেশন করুন";
-  });
-});
+    .then(res => res.json())
+    .then(() => {
+      localStorage.setItem("formSubmitted", "true");
+      form.reset();
+      feeDisplay.value = "";
+      hiddenFee.value = "";
 
+      form.style.display = "none";
+      thankYou.style.display = "block";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    })
+    .catch(() => {
+      alert("❌ সাবমিশনে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+      submitBtn.disabled = false;
+      submitBtn.value = "রেজিস্ট্রেশন করুন";
+    });
+});
 
 function handleReset() {
   const pass = document.getElementById("resetPass").value;
   if (pass === "1234") {
     localStorage.removeItem("formSubmitted");
-    location.reload(); // সরাসরি রিলোড, কোনো alert নাই
+    location.reload();
   } else {
     alert("❌ ভুল পাসওয়ার্ড!");
   }
 }
-
-
-function handleAdminLogin() {
-  const val = document.getElementById("adminPass").value;
-  if (val === "aihai2025") {
-    fetch("https://sheetdb.io/api/v1/7etk4by5v2c7d")
-      .then(res => res.json())
-      .then(data => {
-        let html = "<div style='overflow-x:auto;'><table border='1' cellpadding='6' style='width:100%; border-collapse:collapse; min-width:800px'>";
-        html += "<tr style='background:#f2f2f2'><th>নাম</th><th>ঠিকানা</th><th>SSC</th><th>শ্রেণী</th><th>সংখ্যা</th><th>শিশু</th><th>মোবাইল</th><th>Txn ID</th><th>মোট</th></tr>";
-
-        let totalP = 0, totalTaka = 0;
-
-        data.forEach(row => {
-          const participants = parseInt(row.PARTICIPANTS || 0);
-          const totalFee = parseInt(row.TOTAL_FEE || 0);
-          const child = row.CHILD || "০";
-
-          html += `<tr>
-            <td>${row.NAME || ''}</td>
-            <td>${row.ADDRESS || ''}</td>
-            <td>${row.SSC_YEAR || ''}</td>
-            <td>${row.CLASS || ''}</td>
-            <td>${participants}</td>
-            <td>${child}</td>
-            <td>${row.PHONE || ''}</td>
-            <td>${row.TXN_ID || ''}</td>
-            <td>${totalFee}</td>
-          </tr>`;
-
-          totalP += participants;
-          totalTaka += totalFee;
-        });
-
-        html += "</table></div>";
-
-        document.getElementById("admin-table").innerHTML = html;
-        document.getElementById("admin-summary").innerText = `✅ মোট অংশগ্রহণকারী: ${totalP} | মোট টাকা: ${totalTaka}৳`;
-        document.getElementById("admin-panel").style.display = "block";
-        document.getElementById("adminModal").style.display = "none";
-        window.scrollTo({ top: document.getElementById("admin-panel").offsetTop, behavior: "smooth" });
-      });
-  } else {
-    alert("❌ ভুল অ্যাডমিন পাসওয়ার্ড!");
-  }
-}
 </script>
+
+
+
 <script>
 function generatePDF() {
   const panel = document.getElementById("admin-panel");
