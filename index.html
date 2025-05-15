@@ -584,30 +584,30 @@ window.addEventListener('load', () => {
   const welcomeBox = document.getElementById("welcome-box");
   welcomeBox.style.display = "block";
 
-  // 🎈 Confetti effect (একবার blast)
+  // 🎈 Confetti blast once
   confetti({
     particleCount: 150,
     spread: 100,
     origin: { y: 0.6 }
   });
 
-  // 💬 Typed.js animation
+  // 💬 Typed.js animation with timing set for 7 sec
   new Typed('#typed-welcome', {
     strings: [
       "🎈 ভালোবাসা ও পুনর্মিলনের প্ল্যাটফর্মে আপনাকে স্বাগতম!",
-      "🚀 একসাথে স্মৃতির যাত্রায় চলুন!",
-      "📋 নিচে ফর্ম পূরণ করুন এখনই..."
+      "🚀 একসাথে স্মৃতির যাত্রায় চলুন!"
     ],
-    typeSpeed: 40,
-    backSpeed: 20,
-    backDelay: 2000,
-    loop: true
+    typeSpeed: 30,
+    backSpeed: 0,
+    backDelay: 1000,
+    loop: false,
+    showCursor: false
   });
 
-  // ১০ সেকেন্ড পর হাইড হয়ে যাবে
+  // Hide welcome box after 7 seconds
   setTimeout(() => {
     welcomeBox.style.display = "none";
-  }, 10000);
+  }, 7000);
 });
 </script>
 
