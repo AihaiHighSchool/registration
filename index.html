@@ -560,18 +560,20 @@ function updateFee() {
   const childCount = hasChild ? parseInt(document.getElementById("child-count").value || "0") : 0;
   const under5Count = hasUnder5 ? parseInt(document.getElementById("under5-count").value || "0") : 0;
 
-  let baseFee = 0;
-  if (isRunning) {
-    baseFee = 200;
-  } else if (!isNaN(year)) {
-    if (year >= 1995 && year <= 2016) {
-      baseFee = 400;
-    } else if (year >= 2017 && year <= 2025) {
-      baseFee = 300;
-    }
+let baseFee = 0;
+if (isRunning) {
+  baseFee = 200;
+} else if (!isNaN(year)) {
+  if (year >= 1995 && year <= 2016) {
+    baseFee = 350;
+  } else if (year >= 2017 && year <= 2025) {
+    baseFee = 250;
   }
+}
 
-  const total = baseFee + (childCount * 250);
+// ৫ বছরের বেশি প্রতি শিশুর জন্য ২০০ টাকা
+const total = baseFee + (childCount * 200);
+
 
   // দেখানোর জন্য
   document.getElementById("display_fee").value = total;
