@@ -354,11 +354,27 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
     </select>
   </div>
 
+<div id="loading-box" style="
+  display: none;
+  position: fixed;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #ffffffee;
+  padding: 30px 40px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  z-index: 9999;">
+  ⏳ ডেটা লোড হচ্ছে, দয়া করে অপেক্ষা করুন...
+</div>
 
   
  <!-- ✅ ৫ বছরের বেশি শিশু -->
 <div style="margin-top: 20px;">
-  <label><input type="checkbox" id="has-child"> ৫ বছরের বেশি শিশু আছে?</label>
+  <label><input type="checkbox" id="has-child"> ৫ বছরের ঊর্ধ্যে শিশু আছে?</label>
 </div>
 <div id="child-count-box" style="display:none; margin-top: 10px;">
   <label for="child-count">শিশুর সংখ্যা:</label>
@@ -379,9 +395,18 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
   <input type="text" id="display_fee" readonly>
   <input type="hidden" name="data[TOTAL_FEE]" id="total_fee_input">
 
+<label for="tshirt_size">টি-শার্টের সাইজ:</label>
+<select name="data[T_SHIRT_SIZE]" id="tshirt_size" required>
+  <option value="">-- সাইজ নির্বাচন করুন --</option>
+  <option value="S">S (Small)</option>
+  <option value="M">M (Medium)</option>
+  <option value="L">L (Large)</option>
+  <option value="XL">XL (Extra Large)</option>
+  <option value="XXL">XXL</option>
+</select>
 
 
-<label for="cash_out_method">Cash Out মাধ্যম:</label>
+<label for="cash_out_method">টাকা পাঠানোর মাধ্যম:</label>
 <select name="data[CASH_OUT_METHOD]" id="cash_out_method" required>
   <option value="">-- মাধ্যম নির্বাচন করুন --</option>
   <option value="Bkash">Bkash</option>
@@ -392,7 +417,7 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
   <!-- এখানে নম্বর ও লোগো দেখানো হবে -->
 </div>
 <div style="background: #fff8dc; padding: 12px; border-radius: 6px; margin: 20px 0; line-height: 1.8; font-weight: bold;">
-  💸 <strong>Cash Out করে Transaction ID লিখুন নিচে:</strong><br><br>
+  💸 <strong>Send Money করে Transaction ID লিখুন নিচে:</strong><br><br>
   </select>
 
   <div id="agent-number" style="margin-top: 10px; padding: 8px; background: #ffffe0; border-radius: 6px; font-weight: normal; display: none;">
@@ -401,7 +426,7 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
 </div>
 
  <label for="phone">মোবাইল নাম্বার:</label>
-<input type="tel" name="data[PHONE]" id="phone" maxlength="11" required placeholder="যে নাম্বার থেকে Cash Out করেছেন সেটি দিন">
+<input type="tel" name="data[PHONE]" id="phone" maxlength="11" required placeholder="যে নাম্বার থেকে Send Money করেছেন সেটি দিন">
 
 
 <label for="txn_id">Transaction ID:</label>
@@ -433,7 +458,7 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
 <div style="text-align:center;">
   <button class="reset-button" onclick="document.getElementById('resetModal').style.display='block'">🔁 রেজিস্ট্রেশন পুনরায় চালু করুন</button>
   <br>
-  <button class="admin-button" onclick="document.getElementById('adminModal').style.display='block'">🔐 অ্যাডমিন লগইন</button>
+<button class="admin-button" onclick="openAdminDirect()">👥 অংশগ্রহণকারীদের দেখুন</button>
 </div>
 
 <!-- Admin Panel -->
@@ -789,79 +814,62 @@ setInterval(createBubble, 300);
 </script>
 
 <script>
-function handleAdminLogin() {
-  const pass = document.getElementById("adminPass").value.trim();
-  if (pass === "aihai2025") {
-    document.getElementById("adminModal").style.display = "none";
+function openAdminDirect() {
+  // ⏳ লোডিং বক্স দেখান
+  document.getElementById("loading-box").style.display = "block";
 
-    fetch("https://sheetdb.io/api/v1/7etk4by5v2c7d")
-      .then(res => res.json())
-      .then(data => {
-        console.log(data); // ডেটা কনসোলে দেখাবে, নিশ্চিত হওয়ায়
+  fetch("https://sheetdb.io/api/v1/7etk4by5v2c7d")
+    .then(res => res.json())
+    .then(data => {
+      let html = "<div style='overflow-x:auto;'><table border='1' cellpadding='6' style='width:100%; border-collapse:collapse; min-width:800px'>";
+      html += "<tr style='background:#f2f2f2'><th>নাম</th><th>ঠিকানা</th><th>SSC</th><th>শ্রেণী</th><th>সংখ্যা</th><th>৫ বছরের বেশি শিশু</th><th>৫ বছরের নিচে শিশু</th><th>টি-শার্ট সাইজ</th><th>মোবাইল</th><th>Cash Out মাধ্যম</th><th>Txn ID</th><th>মোট</th><th>স্টেটাস</th></tr>";
 
-        let html = "<div style='overflow-x:auto;'><table border='1' cellpadding='6' style='width:100%; border-collapse:collapse; min-width:800px'>";
-        html += "<tr style='background:#f2f2f2'><th>নাম</th><th>ঠিকানা</th><th>SSC</th><th>শ্রেণী</th><th>সংখ্যা</th><th>৫ বছরের বেশি শিশু</th><th>৫ বছরের নিচে শিশু</th><th>মোবাইল</th><th>Cash Out মাধ্যম</th><th>Txn ID</th><th>মোট</th><th>স্টেটাস</th></tr>";
+      data.forEach(row => {
+        const participants = parseInt(row.PARTICIPANTS || 0);
+        const totalFee = parseInt(row.TOTAL_FEE || 0);
+        const child = row.CHILD || "০";
+        const under5 = row.UNDER_5_YEAR || "০";
 
-        data.forEach(row => {
-          const participants = parseInt(row.PARTICIPANTS || 0);
-          const totalFee = parseInt(row.TOTAL_FEE || 0);
-          const child = row.CHILD || "০";
-          const under5 = row.UNDER_5_YEAR || "০";
+        html += `<tr data-id="${row.TXN_ID}">
+          <td>${row.NAME || ''}</td>
+          <td>${row.ADDRESS || ''}</td>
+          <td>${row.SSC_YEAR || ''}</td>
+          <td>${row.CLASS || ''}</td>
+          <td>${participants}</td>
+          <td>${child}</td>
+          <td>${under5}</td>
+          <td>${row.T_SHIRT_SIZE || ''}</td>
+          <td>${row.PHONE || ''}</td>
+          <td>${row.CASH_OUT_METHOD || ''}</td>
+          <td>${row.TXN_ID || ''}</td>
+          <td>${totalFee}</td>
+          <td>
+            <button class="confirm-btn">✔️</button>
+            <button class="reject-btn">❌</button>
+          </td>
+        </tr>`;
+      });
 
-          html += `<tr data-id="${row.TXN_ID}">
-            <td>${row.NAME || ''}</td>
-            <td>${row.ADDRESS || ''}</td>
-            <td>${row.SSC_YEAR || ''}</td>
-            <td>${row.CLASS || ''}</td>
-            <td>${participants}</td>
-            <td>${child}</td>
-            <td>${under5}</td>
-            <td>${row.PHONE || ''}</td>
-            <td>${row.CASH_OUT_METHOD || ''}</td>
-            <td>${row.TXN_ID || ''}</td>
-            <td>${totalFee}</td>
-            <td>
-              <button class="confirm-btn">✔️</button>
-              <button class="reject-btn">❌</button>
-            </td>
-          </tr>`;
-        });
+      html += "</table></div>";
 
-        html += "</table></div>";
+      document.getElementById("admin-table").innerHTML = html;
+      setupStatusButtons();
+      loadStatuses();
+      updateTotals();
 
-        document.getElementById("admin-table").innerHTML = html;
+      // ✅ admin panel দেখান
+      document.getElementById("admin-panel").style.display = "block";
 
-        setupStatusButtons();
-        loadStatuses();
-        updateTotals();
+      // ⬆️ স্ক্রল করুন
+      window.scrollTo({ top: document.getElementById("admin-panel").offsetTop, behavior: "smooth" });
 
-        document.getElementById("admin-panel").style.display = "block";
-        window.scrollTo({ top: document.getElementById("admin-panel").offsetTop, behavior: "smooth" });
-      })
-      .catch(() => alert("❌ ডেটা লোড করতে সমস্যা হয়েছে!"));
-
-  } else {
-    alert("❌ ভুল অ্যাডমিন পাসওয়ার্ড!");
-  }
+    })
+    .catch(() => alert("❌ ডেটা লোড করতে সমস্যা হয়েছে!"))
+    .finally(() => {
+      // 🔚 লোডিং বক্স লুকান
+      document.getElementById("loading-box").style.display = "none";
+    });
 }
-
-
-// যখন ৫ বছরের বেশি শিশু চেক করা হবে
-document.getElementById("has-child").addEventListener("change", function () {
-  const box = document.getElementById("child-count-box");
-  const select = document.getElementById("child-count");
-  if (this.checked) {
-    box.style.display = "block";
-    select.innerHTML = "";
-    for (let i = 1; i <= 10; i++) {
-      select.appendChild(new Option(i, i));
-    }
-  } else {
-    box.style.display = "none";
-    select.innerHTML = "";
-  }
-  updateFee();
-});
 
 // যখন ৫ বছরের নিচে শিশু চেক করা হবে
 document.getElementById("has-under5").addEventListener("change", function () {
@@ -901,11 +909,11 @@ document.getElementById("running-student").addEventListener("change", function (
 
   const agents = {
     Bkash: {
-      number: '01794725919',
+      number: '01729-436399',
       logo: 'https://i.postimg.cc/QxDFmXXf/1.png'
     },
     Nagad: {
-      number: '01794725919',
+      number: '01729-436399',
       logo: 'https://i.postimg.cc/MZVc1c8c/unnamed.png'
     }
   };
