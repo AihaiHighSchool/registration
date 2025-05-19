@@ -501,22 +501,24 @@ for (let y = 1995; y <= 2025; y++) {
 
 
 
-hasChildCheckbox.addEventListener("change", function () {
-  const total = parseInt(participants.value);
-  if (this.checked && !isNaN(total) && total > 1) {
-    const maxChild = total - 1;
-    childCountBox.style.display = "block";
-    childCountSelect.innerHTML = "";
-    for (let i = 1; i <= maxChild; i++) {
-      const opt = new Option(i, i);
-      childCountSelect.appendChild(opt);
+document.getElementById("has-child").addEventListener("change", function () {
+  const box = document.getElementById("child-count-box");
+  const select = document.getElementById("child-count");
+
+  if (this.checked) {
+    box.style.display = "block";
+    select.innerHTML = "";
+    for (let i = 1; i <= 10; i++) {
+      select.appendChild(new Option(i, i));
     }
   } else {
-    childCountBox.style.display = "none";
-    childCountSelect.innerHTML = "";
+    box.style.display = "none";
+    select.innerHTML = "";
   }
+
   updateFee();
 });
+
 
 under5Checkbox.addEventListener("change", function () {
   const total = parseInt(participants.value);
