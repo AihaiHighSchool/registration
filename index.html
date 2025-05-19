@@ -858,9 +858,8 @@ function openAdminDirect() {
 
       data.forEach(row => {
         const id = row.TXN_ID || '';
-        const statusData = JSON.parse(localStorage.getItem("paymentStatus") || '{}');
-        const status = statusData[id];
-
+const status = row.STATUS?.toLowerCase(); // SheetDB থেকে সরাসরি নেওয়া
+     
         let statusCell = "";
         if (isAdmin) {
           statusCell = `
@@ -999,25 +998,33 @@ agentNumberDiv.innerHTML = `<img src="${agents[selected].logo}" alt="${selected}
 </script>
 
 <script>
-
-// লোকালস্টোরেজে স্টেটাস সেভ করার ফাংশন
 function saveStatus(id, status) {
+  // লোকালস্টোরেজে সংরক্ষণ (ঐচ্ছিক)
   let statusData = JSON.parse(localStorage.getItem('paymentStatus') || '{}');
   statusData[id] = status;
   localStorage.setItem('paymentStatus', JSON.stringify(statusData));
+
+  // 🔄 Google SheetDB তে STATUS আপডেট
+  fetch(`https://sheetdb.io/api/v1/7etk4by5v2c7d/TXN_ID/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      data: {
+        STATUS: status
+      }
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    console.log("✅ STATUS updated in SheetDB:", data);
+  })
+  .catch(err => {
+    console.error("❌ SheetDB update failed:", err);
+  });
 }
 
-// পেজ লোডের সময় লোকালস্টোরেজ থেকে স্টেটাস নিয়ে UI আপডেট
-
-
-</script>
-<script>
-// লোকালস্টোরেজে স্টেটাস সেভ করার ফাংশন
-function saveStatus(id, status) {
-  let statusData = JSON.parse(localStorage.getItem('paymentStatus') || '{}');
-  statusData[id] = status;
-  localStorage.setItem('paymentStatus', JSON.stringify(statusData));
-}
 
 function loadStatuses() {
   let statusData = JSON.parse(localStorage.getItem('paymentStatus') || '{}');
