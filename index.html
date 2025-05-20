@@ -331,7 +331,7 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
 </div>
 
 
-<form id="registration-form" action="https://sheetdb.io/api/v1/7etk4by5v2c7d" method="post">
+<form id="registration-form" action="https://sheetdb.io/api/v1/o1dz7j1erdfbj" method="post">
   <label for="name">ছাত্র/ছাত্রীর নাম:</label>
   <input type="text" name="data[NAME]" id="name" required>
 
@@ -832,10 +832,12 @@ setInterval(createBubble, 300);
 function openAdminDirect() {
   document.getElementById("loading-box").style.display = "block";
 
-  fetch("https://sheetdb.io/api/v1/7etk4by5v2c7d")
+  fetch("https://sheetdb.io/api/v1/o1dz7j1erdfbj")
     .then(res => res.json())
     .then(data => {
-      let isAdmin = localStorage.getItem("isAdmin") === "true";
+  let isAdmin;
+  isAdmin = localStorage.getItem("isAdmin") === "true";
+
 
       let html = `
         <div style='overflow-x:auto;'>
@@ -858,20 +860,47 @@ function openAdminDirect() {
 
       data.forEach(row => {
         const id = row.TXN_ID || '';
-const status = row.STATUS?.toLowerCase(); // SheetDB থেকে সরাসরি নেওয়া
+const status = (row.STATUS || '').toLowerCase(); // SheetDB থেকে সরাসরি নেওয়া
      
-        let statusCell = "";
-        if (isAdmin) {
-          statusCell = `
-            <div class="status-cell" data-txn="${id}">
-              <button class="confirm-btn">✔️</button>
-              <button class="reject-btn">❌</button>
-            </div>`;
-        } else {
-          const text = status === 'confirmed' ? 'Approved' : 'Pending';
-          const color = status === 'confirmed' ? 'green' : 'orange';
-          statusCell = `<div class="status-cell" data-txn="${id}"><span class="status-label" style="color:${color}; font-weight:bold;">${text}</span></div>`;
-        }
+const text = status === 'confirmed' ? 'Approved' : (status === 'rejected' ? 'Rejected' : 'Pending');
+const color = status === 'confirmed' ? 'green' : (status === 'rejected' ? 'red' : 'orange');
+
+let statusCell = "";
+
+if (isAdmin) {
+  if (status === 'confirmed') {
+    statusCell = `
+      <div class="status-cell" data-txn="${id}">
+        <span class="status-label" style="color:green; font-weight:bold;">Approved</span>
+      </div>`;
+  } else if (status === 'rejected') {
+    statusCell = `
+      <div class="status-cell" data-txn="${id}">
+        <span class="status-label" style="color:red; font-weight:bold;">Rejected</span>
+      </div>`;
+  } else {
+    // Pending হলে শুধু Admin এর জন্য Approve/Reject বোতাম দেখানো হবে
+    statusCell = `
+      <div class="status-cell" data-txn="${id}">
+        <span class="status-label" style="color:orange; font-weight:bold;">Pending</span>
+        <button class="confirm-btn">✔️</button>
+        <button class="reject-btn">❌</button>
+      </div>`;
+  }
+} else {
+  // সাধারণ ইউজারের জন্য কেবল টেক্সট
+  if (status === 'confirmed') {
+    statusCell = `<span class="status-label" style="color:green; font-weight:bold;">Approved</span>`;
+  } else if (status === 'rejected') {
+    statusCell = `<span class="status-label" style="color:red; font-weight:bold;">Rejected</span>`;
+  } else {
+    statusCell = `<span class="status-label" style="color:orange; font-weight:bold;">Pending</span>`;
+  }
+}
+
+
+
+
 
         html += `
           <tr data-id="${id}">
@@ -999,26 +1028,18 @@ agentNumberDiv.innerHTML = `<img src="${agents[selected].logo}" alt="${selected}
 
 <script>
 function saveStatus(id, status) {
-  // লোকালস্টোরেজে সংরক্ষণ (ঐচ্ছিক)
-  let statusData = JSON.parse(localStorage.getItem('paymentStatus') || '{}');
-  statusData[id] = status;
-  localStorage.setItem('paymentStatus', JSON.stringify(statusData));
-
-  // 🔄 Google SheetDB তে STATUS আপডেট
-  fetch(`https://sheetdb.io/api/v1/7etk4by5v2c7d/TXN_ID/${id}`, {
+  fetch(`https://sheetdb.io/api/v1/o1dz7j1erdfbj/TXN_ID/${id}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({
-      data: {
-        STATUS: status
-      }
-    })
+    body: JSON.stringify({ data: { STATUS: status } })
   })
   .then(res => res.json())
   .then(data => {
     console.log("✅ STATUS updated in SheetDB:", data);
+    // 🔄 স্টেটাস আপডেট হওয়ার পর পুরো টেবিল আবার লোড করুন
+    openAdminDirect();  // এই লাইনটাই আগে ছিল না
   })
   .catch(err => {
     console.error("❌ SheetDB update failed:", err);
@@ -1026,45 +1047,39 @@ function saveStatus(id, status) {
 }
 
 
-function loadStatuses() {
-  let statusData = JSON.parse(localStorage.getItem('paymentStatus') || '{}');
-  document.querySelectorAll('#admin-table table tr[data-id]').forEach(tr => {
-    const id = tr.dataset.id;
-    const confirmBtn = tr.querySelector('.confirm-btn');
-    const rejectBtn = tr.querySelector('.reject-btn');
 
-    if (statusData[id] === 'confirmed') {
+function loadStatuses() {
+  document.querySelectorAll('#admin-table table tr[data-id]').forEach(tr => {
+    const statusCell = tr.querySelector('.status-cell');
+    const id = tr.dataset.id;
+
+    const label = statusCell?.querySelector('.status-label');
+    const currentText = label?.textContent.trim().toLowerCase();
+
+    if (currentText === 'approved') {
       tr.classList.add('confirmed');
       tr.classList.remove('rejected');
-      if (confirmBtn) confirmBtn.style.display = 'inline-block';
-      if (rejectBtn) rejectBtn.style.display = 'none';
-    } else if (statusData[id] === 'rejected') {
+    } else if (currentText === 'rejected') {
       tr.classList.add('rejected');
       tr.classList.remove('confirmed');
-      if (confirmBtn) confirmBtn.style.display = 'none';
-      if (rejectBtn) rejectBtn.style.display = 'inline-block';
     } else {
       tr.classList.remove('confirmed', 'rejected');
-      if (confirmBtn) confirmBtn.style.display = 'inline-block';
-      if (rejectBtn) rejectBtn.style.display = 'inline-block';
     }
   });
 }
 
 
 function updateTotals() {
-  let statusData = JSON.parse(localStorage.getItem('paymentStatus') || '{}');
-
   let totalParticipants = 0;
   let totalFee = 0;
   let totalChild = 0;
   let totalUnder5 = 0;
 
   document.querySelectorAll('#admin-table table tr[data-id]').forEach(tr => {
-    const id = tr.dataset.id;
-    if (statusData[id] === 'confirmed') {
+    const statusText = tr.querySelector('.status-label')?.textContent.toLowerCase();
+    if (statusText === 'approved') {
       const participants = parseInt(tr.children[4].textContent) || 0;
-      const totalFeeRow = parseInt(tr.children[10].textContent) || 0;
+      const totalFeeRow = parseInt(tr.children[11].textContent) || 0;
       const child = parseInt(tr.children[5].textContent) || 0;
       const under5 = parseInt(tr.children[6].textContent) || 0;
 
@@ -1091,8 +1106,13 @@ function updateTotals() {
   `;
 }
 
+
 function setupStatusButtons() {
+  const isAdmin = localStorage.getItem("isAdmin") === "true";
+  if (!isAdmin) return;
+
   document.querySelectorAll('.confirm-btn').forEach(btn => {
+
 btn.addEventListener('click', function () {
   const tr = this.closest('tr');
   tr.classList.add('confirmed');
@@ -1108,7 +1128,14 @@ btn.addEventListener('click', function () {
   // ✅ Confirm করার পর UI-তে "Approved" দেখানো
   const statusCell = tr.querySelector('.status-cell');
   if (statusCell) {
-    statusCell.innerHTML = `<span class="status-label" style="color:green; font-weight:bold;">Approved</span>`;
+const newStatusLabel = document.createElement('span');
+newStatusLabel.className = 'status-label';
+newStatusLabel.style.color = 'green';
+newStatusLabel.style.fontWeight = 'bold';
+newStatusLabel.textContent = 'Approved';
+
+statusCell.innerHTML = ''; // পুরনো ক্লিয়ার
+statusCell.appendChild(newStatusLabel);
   }
 });
 
