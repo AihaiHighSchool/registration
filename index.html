@@ -343,8 +343,9 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
 <!-- ছাত্র-ছাত্রী নির্বাচন (একই লাইনে পাশে পাশে) -->
 <div style="margin-bottom: 15px; display: flex; gap: 20px; align-items: center;">
  
-  <label><input type="checkbox" id="is-boy" required> ছাত্র</label>
-   <label><input type="checkbox" id="is-girl" required> ছাত্রী</label>
+<input type="checkbox" id="is-boy"> ছাত্র
+<input type="checkbox" id="is-girl"> ছাত্রী
+
 </div>
 
 
@@ -635,7 +636,16 @@ document.getElementById("running-student").addEventListener("change", function (
   updateFee();
 });
 form.onsubmit = async function (e) {
-  e.preventDefault(); // 🔐 ফর্ম সাবমিট আটকানো
+  e.preventDefault();
+
+  const isBoy = document.getElementById("is-boy").checked;
+  const isGirl = document.getElementById("is-girl").checked;
+
+  if (!isBoy && !isGirl) {
+    alert("✅ রেজিস্ট্রেশন করতে হলে ছাত্র অথবা ছাত্রী নির্বাচন করুন।");
+    return false;
+  }
+
   updateFee();
 
   const submitBtn = form.querySelector('input[type="submit"]'); // ✅ উপরে আনানো হয়েছে
