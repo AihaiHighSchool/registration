@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="bn">
 <head>
@@ -339,7 +340,7 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
 </div>
 
 
-<form id="registration-form" action="https://sheetdb.io/api/v1/c0otp8zef92bn" method="post">
+<form id="registration-form" action="https://sheetdb.io/api/v1/qx7q6btixln71" method="post">
 <!-- ছাত্র-ছাত্রী নির্বাচন (একই লাইনে পাশে পাশে) -->
 <div style="margin-bottom: 15px; display: flex; gap: 20px; align-items: center;">
  
@@ -669,7 +670,7 @@ form.onsubmit = async function (e) {
 
   // 🛑 একই Transaction ID চেক
   try {
-    const existingTxnCheck = await fetch("https://sheetdb.io/api/v1/c0otp8zef92bn/search?TXN_ID=" + txn);
+    const existingTxnCheck = await fetch("https://sheetdb.io/api/v1/qx7q6btixln71/search?TXN_ID=" + txn);
     const existingTxnData = await existingTxnCheck.json();
 
     if (existingTxnData.length > 0) {
@@ -756,13 +757,32 @@ function handleAdminLogin() {
 
 <script>
 function generatePDF() {
-  const panel = document.getElementById("admin-panel");
-  const downloadBtn = panel.querySelector(".no-print");
+  const originalPanel = document.getElementById("admin-panel");
 
-  if (downloadBtn) downloadBtn.style.display = "none";
+  // ✅ 1. Clone panel
+  const clone = originalPanel.cloneNode(true);
 
+  // ✅ 2. Style to hide the clone (but visible to html2canvas)
+  clone.style.position = 'fixed';
+  clone.style.top = '-9999px';
+  clone.style.left = '0';
+  clone.style.opacity = '1';
+  clone.style.zIndex = '-1';
+  document.body.appendChild(clone);
+
+  // ✅ 3. Mask email and txn in clone
+  const rows = clone.querySelectorAll('table tr');
+  rows.forEach((tr, index) => {
+    const cells = tr.querySelectorAll('td');
+    if (cells.length > 11) {
+      cells[8].textContent = '********';  // Email column
+      cells[11].textContent = '********'; // Txn ID column
+    }
+  });
+
+  // ✅ 4. Generate PDF from clone
   const opt = {
-    margin: [0.2, 0.2, 0.2, 0.2], // Top, Right, Bottom, Left
+    margin: 0.5,
     filename: 'registration_list.pdf',
     image: { type: 'jpeg', quality: 1 },
     html2canvas: {
@@ -770,18 +790,15 @@ function generatePDF() {
       useCORS: true,
       scrollY: 0
     },
-    jsPDF: {
-      unit: 'in',
-      format: 'a4',
-      orientation: 'landscape'
-    },
-    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    jsPDF: { unit: 'in', format: 'A4', orientation: 'landscape' }
   };
 
-  html2pdf().set(opt).from(panel).save().then(() => {
-    if (downloadBtn) downloadBtn.style.display = "block";
+  html2pdf().set(opt).from(clone).save().then(() => {
+    document.body.removeChild(clone); // ✅ 5. Remove clone after use
   });
 }
+
+
 </script>
 
 
@@ -900,7 +917,7 @@ setInterval(createBubble, 300);
 function openAdminDirect() {
   document.getElementById("loading-box").style.display = "block";
 
-  fetch("https://sheetdb.io/api/v1/c0otp8zef92bn")
+  fetch("https://sheetdb.io/api/v1/qx7q6btixln71")
     .then(res => res.json())
     .then(data => {
   let isAdmin;
@@ -919,6 +936,7 @@ function openAdminDirect() {
               <th>৫ বছরের বেশি শিশু</th>
               <th>৫ বছরের নিচে শিশু</th>
               <th>টি-শার্ট সাইজ</th>
+              <th>ইমেইল</th>
               <th>মোবাইল</th>
               <th>Cash Out মাধ্যম</th>
               <th>Txn ID</th>
@@ -930,6 +948,10 @@ function openAdminDirect() {
       const id = row.TXN_ID || '';
 const isAdmin = localStorage.getItem("isAdmin") === "true";
 const maskedTxnId = isAdmin ? id : '*******';
+
+const email = row.EMAIL || '';
+const maskedEmail = isAdmin ? email : '********';
+
 
 const status = (row.STATUS || '').toLowerCase(); // SheetDB থেকে সরাসরি নেওয়া
      
@@ -983,6 +1005,7 @@ if (isAdmin) {
             <td>${row.CHILD || '০'}</td>
             <td>${row.UNDER_5_YEAR || '০'}</td>
             <td>${row.T_SHIRT_SIZE || ''}</td>
+            <td>${maskedEmail}</td>
             <td>${row.PHONE || ''}</td>
             <td>${row.CASH_OUT_METHOD || ''}</td>
            <td>${maskedTxnId}</td>
@@ -1100,7 +1123,7 @@ agentNumberDiv.innerHTML = `<img src="${agents[selected].logo}" alt="${selected}
 
 <script>
 function saveStatus(id, status) {
-  fetch(`https://sheetdb.io/api/v1/c0otp8zef92bn/TXN_ID/${id}`, {
+  fetch(`https://sheetdb.io/api/v1/qx7q6btixln71/TXN_ID/${id}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json'
@@ -1205,6 +1228,23 @@ btn.addEventListener('click', function () {
   if (rejectBtn) rejectBtn.style.display = 'none';
 
   saveStatus(tr.dataset.id, 'confirmed');
+  // ✅ EmailJS: Confirmation ইমেইল পাঠানো
+const name = tr.children[0].textContent;
+const email = tr.children[8].textContent;
+const year = tr.children[2].textContent;
+
+if (email !== '********' && /\S+@\S+\.\S+/.test(email)) {
+  emailjs.send("service_lw53o85", "template_rihu06c", {
+    to_name: name,
+    to_email: email,
+    batch_year: year
+  }).then(() => {
+    console.log("✅ Confirmation email sent to", email);
+  }).catch(error => {
+    console.error("❌ Email sending failed:", error);
+  });
+}
+
   updateTotals();
 
   // ✅ Confirm করার পর UI-তে "Approved" দেখানো
@@ -1280,6 +1320,16 @@ document.getElementById("is-boy").addEventListener("change", function () {
   }
 });
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
+<!-- Initialize EmailJS -->
+<script>
+  (function() {
+    emailjs.init("wj1RbmwxgrsIZMwCL"); // ✅ আপনার দেওয়া Public Key / User ID
+  })();
+</script>
+
 
 <button id="adminLoginBtn" onclick="document.getElementById('adminModal').style.display='block'" style="position: fixed; top: 10px; right: 10px; padding: 6px 10px; font-size: 18px; background: #333; color: #fff; border-radius: 50%; border: none; cursor: pointer; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;" title="Admin Access">🔒</button>
 
