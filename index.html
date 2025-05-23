@@ -8,6 +8,15 @@
 
 
   <style>
+input[type="email"] {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  box-sizing: border-box;
+}
 
 #typed-welcome {
   font-size: 30px;
@@ -302,7 +311,6 @@ header {
 
 <body>
 
-  <button id="adminLoginBtn" onclick="document.getElementById('adminModal').style.display='block'" style="position: fixed; top: 10px; right: 10px; padding: 6px 12px; font-size: 14px; background: #333; color: #fff; border-radius: 6px; border: none; cursor: pointer;">Admin</button>
 
 
   
@@ -331,8 +339,16 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
 </div>
 
 
-<form id="registration-form" action="https://sheetdb.io/api/v1/o1dz7j1erdfbj" method="post">
-  <label for="name">ছাত্র/ছাত্রীর নাম:</label>
+<form id="registration-form" action="https://sheetdb.io/api/v1/c0otp8zef92bn" method="post">
+<!-- ছাত্র-ছাত্রী নির্বাচন (একই লাইনে পাশে পাশে) -->
+<div style="margin-bottom: 15px; display: flex; gap: 20px; align-items: center;">
+ 
+  <label><input type="checkbox" id="is-boy" required> ছাত্র</label>
+   <label><input type="checkbox" id="is-girl" required> ছাত্রী</label>
+</div>
+
+
+  <label for="name">নাম:</label>
   <input type="text" name="data[NAME]" id="name" required>
 
   <label for="address">স্থায়ী ঠিকানা:</label>
@@ -376,6 +392,11 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
 
   
  <!-- ✅ ৫ বছরের বেশি শিশু -->
+<div id="with-husband-box" style="margin-top: 20px; display: none;">
+  <label><input type="checkbox" id="with-husband"> স্বামী সহ</label>
+</div>
+
+
 <div style="margin-top: 20px;">
   <label><input type="checkbox" id="has-child"> ৫ বছরের ঊর্ধ্যে শিশু আছে?</label>
 </div>
@@ -393,6 +414,8 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
   <select id="under5-count" name="data[UNDER_5_YEAR]"></select>
 </div>
 
+<label for="email">ইমেইল ঠিকানা:</label>
+<input type="email" name="data[EMAIL]" id="email" required placeholder="আপনার ইমেইল দিন">
 
   <label>মোট চাঁদা (৳):</label>
   <input type="text" id="display_fee" readonly>
@@ -479,7 +502,6 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
 <script>
 const form = document.getElementById("registration-form");
 const thankYou = document.getElementById("thank-you");
-const sscYear = document.getElementById("ssc_year");
 
 const feeDisplay = document.getElementById("display_fee");
 const hiddenFee = document.getElementById("total_fee_input");
@@ -492,11 +514,6 @@ const under5Question = document.getElementById("under5-question");
 const under5Checkbox = document.getElementById("has-under5");
 const under5Box = document.getElementById("under5-box");
 let under5Select = document.getElementById("under5-count");
-
-for (let y = 1995; y <= 2025; y++) {
-  let opt = new Option(y, y);
-  sscYear.appendChild(opt);
-}
 
 
 
@@ -520,10 +537,14 @@ document.getElementById("has-child").addEventListener("change", function () {
 
 
 under5Checkbox.addEventListener("change", function () {
-  const total = parseInt(participants.value);
+  const withHusband = document.getElementById("with-husband").checked;
+  const hasChild = document.getElementById("has-child").checked;
+  const childCount = hasChild ? parseInt(document.getElementById("child-count").value || "0") : 0;
 
-  if (this.checked && !isNaN(total) && total > 1) {
-    const maxUnder5 = total - 1;
+  const totalParticipants = 1 + (withHusband ? 1 : 0) + childCount;
+
+  if (this.checked && totalParticipants > 1) {
+    const maxUnder5 = totalParticipants - 1;
     under5Box.style.display = "block";
     under5Select.innerHTML = "";
 
@@ -537,7 +558,6 @@ under5Checkbox.addEventListener("change", function () {
   } else {
     under5Box.style.display = "none";
 
-    // ✅ clone করে পুরাতন ইভেন্ট listener সরানো হচ্ছে
     const newSelect = under5Select.cloneNode(true);
     under5Select.parentNode.replaceChild(newSelect, under5Select);
     under5Select = newSelect;
@@ -546,51 +566,54 @@ under5Checkbox.addEventListener("change", function () {
   }
 });
 
+
 childCountSelect.addEventListener("change", updateFee);
+const sscYear = document.getElementById("ssc_year");
 sscYear.addEventListener("change", updateFee);
+
 
 function updateFee() {
   const year = parseInt(document.getElementById("ssc_year").value);
   const isRunning = document.getElementById("running-student").checked;
-
+  const withHusband = document.getElementById("with-husband").checked;
   const hasChild = document.getElementById("has-child").checked;
   const hasUnder5 = document.getElementById("has-under5").checked;
 
   const childCount = hasChild ? parseInt(document.getElementById("child-count").value || "0") : 0;
   const under5Count = hasUnder5 ? parseInt(document.getElementById("under5-count").value || "0") : 0;
 
-let baseFee = 0;
-if (isRunning) {
-  baseFee = 200;
-} else if (!isNaN(year)) {
-  if (year >= 1995 && year <= 2016) {
-    baseFee = 350;
-  } else if (year >= 2017 && year <= 2025) {
-    baseFee = 250;
+  let baseFee = 0;
+  if (isRunning) {
+    baseFee = 200;
+  } else if (!isNaN(year)) {
+    baseFee = (year >= 1995 && year <= 2016) ? 350 : 250;
   }
-}
 
-// ৫ বছরের বেশি প্রতি শিশুর জন্য ২০০ টাকা
-const total = baseFee + (childCount * 200);
+  const husbandExtra = withHusband ? baseFee : 0;
+  const total = baseFee + husbandExtra + (childCount * 200);
+  const totalParticipants = 1 + (withHusband ? 1 : 0) + childCount + under5Count;
 
-
-  // দেখানোর জন্য
+  // Show in UI
   document.getElementById("display_fee").value = total;
   document.getElementById("total_fee_input").value = total;
 
-  // গুগল শিটে পাঠানোর জন্য মোট অংশগ্রহণকারী = নিজে + শিশু
-  const totalParticipants = 1 + childCount + under5Count;
+  // Hidden inputs create/update
+  const addOrUpdateHidden = (name, value) => {
+    let input = document.querySelector(`input[name='data[${name}]']`);
+    if (!input) {
+      input = document.createElement("input");
+      input.type = "hidden";
+      input.name = `data[${name}]`;
+      document.getElementById("registration-form").appendChild(input);
+    }
+    input.value = value;
+  };
 
-  const oldInput = document.querySelector("input[name='data[PARTICIPANTS]']");
-  if (oldInput) oldInput.remove();
-
-  const participantsInput = document.createElement("input");
-  participantsInput.type = "hidden";
-  participantsInput.name = "data[PARTICIPANTS]";
-  participantsInput.value = totalParticipants;
-
-  document.getElementById("registration-form").appendChild(participantsInput);
+  addOrUpdateHidden("PARTICIPANTS", totalParticipants);
+  addOrUpdateHidden("TOTAL_FEE", total);
 }
+
+
 
 
 if (localStorage.getItem("formSubmitted")) {
@@ -615,9 +638,28 @@ form.onsubmit = async function (e) {
   e.preventDefault(); // 🔐 ফর্ম সাবমিট আটকানো
   updateFee();
 
+  const submitBtn = form.querySelector('input[type="submit"]'); // ✅ উপরে আনানো হয়েছে
   const phone = document.getElementById("phone").value;
   const txn = document.getElementById("txn_id").value.trim();
-  const submitBtn = form.querySelector('input[type="submit"]');
+
+  // 🛑 একই Transaction ID চেক
+  try {
+    const existingTxnCheck = await fetch("https://sheetdb.io/api/v1/c0otp8zef92bn/search?TXN_ID=" + txn);
+    const existingTxnData = await existingTxnCheck.json();
+
+    if (existingTxnData.length > 0) {
+      alert("❌ এই Transaction ID ইতিমধ্যেই ব্যবহৃত হয়েছে।");
+      submitBtn.disabled = false;
+      submitBtn.value = "রেজিস্ট্রেশন করুন";
+      return false;
+    }
+  } catch (checkErr) {
+    alert("❌ সার্ভারে সমস্যা হচ্ছে। পরে আবার চেষ্টা করুন।");
+    console.error("TXN check error:", checkErr);
+    submitBtn.disabled = false;
+    submitBtn.value = "রেজিস্ট্রেশন করুন";
+    return false;
+  }
 
   if (phone.length !== 11 || !/^\d+$/.test(phone)) {
     alert("সঠিক মোবাইল নাম্বার দিন!");
@@ -653,17 +695,18 @@ form.onsubmit = async function (e) {
 
   } catch (err) {
     alert("❌ সাবমিশনে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+    console.error("Submit error:", err);
     submitBtn.disabled = false;
     submitBtn.value = "রেজিস্ট্রেশন করুন";
   }
 
-  return false; // ✅ এটা রেখে দিন
+  return false; // ✅ এটা রাখা দরকার
 };
 
 
 function handleReset() {
   const pass = document.getElementById("resetPass").value;
-  if (pass === "1234") {
+  if (pass === "1234r") {
     localStorage.removeItem("formSubmitted");
     location.reload();
   } else {
@@ -672,7 +715,7 @@ function handleReset() {
 }
 function handleAdminLogin() {
   const pass = document.getElementById("adminPass").value;
-  if (pass === "aihai2025") {
+  if (pass === "eid25") {
     localStorage.setItem("isAdmin", "true");
     document.getElementById("adminModal").style.display = "none"; // মডাল বন্ধ করুন
     openAdminDirect(); // admin panel দেখান
@@ -832,7 +875,7 @@ setInterval(createBubble, 300);
 function openAdminDirect() {
   document.getElementById("loading-box").style.display = "block";
 
-  fetch("https://sheetdb.io/api/v1/o1dz7j1erdfbj")
+  fetch("https://sheetdb.io/api/v1/c0otp8zef92bn")
     .then(res => res.json())
     .then(data => {
   let isAdmin;
@@ -859,7 +902,10 @@ function openAdminDirect() {
             </tr>`;
 
       data.forEach(row => {
-        const id = row.TXN_ID || '';
+      const id = row.TXN_ID || '';
+const isAdmin = localStorage.getItem("isAdmin") === "true";
+const maskedTxnId = isAdmin ? id : '*******';
+
 const status = (row.STATUS || '').toLowerCase(); // SheetDB থেকে সরাসরি নেওয়া
      
 const text = status === 'confirmed' ? 'Approved' : (status === 'rejected' ? 'Rejected' : 'Pending');
@@ -914,7 +960,7 @@ if (isAdmin) {
             <td>${row.T_SHIRT_SIZE || ''}</td>
             <td>${row.PHONE || ''}</td>
             <td>${row.CASH_OUT_METHOD || ''}</td>
-            <td>${id}</td>
+           <td>${maskedTxnId}</td>
             <td>${row.TOTAL_FEE || ''}</td>
             <td>${statusCell}</td>
           </tr>`;
@@ -957,6 +1003,7 @@ document.getElementById("has-under5").addEventListener("change", function () {
   }
   updateFee();
 });
+document.getElementById("with-husband").addEventListener("change", updateFee);
 
 // যখন সংখ্যা পরিবর্তন হবে
 document.getElementById("child-count").addEventListener("change", updateFee);
@@ -1028,7 +1075,7 @@ agentNumberDiv.innerHTML = `<img src="${agents[selected].logo}" alt="${selected}
 
 <script>
 function saveStatus(id, status) {
-  fetch(`https://sheetdb.io/api/v1/o1dz7j1erdfbj/TXN_ID/${id}`, {
+  fetch(`https://sheetdb.io/api/v1/c0otp8zef92bn/TXN_ID/${id}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json'
@@ -1038,13 +1085,23 @@ function saveStatus(id, status) {
   .then(res => res.json())
   .then(data => {
     console.log("✅ STATUS updated in SheetDB:", data);
-    // 🔄 স্টেটাস আপডেট হওয়ার পর পুরো টেবিল আবার লোড করুন
-    openAdminDirect();  // এই লাইনটাই আগে ছিল না
+
+    // 📨 Email Automation via Apps Script Web App
+    fetch("https://script.google.com/macros/s/AKfycbykmYRMLdk1erlEJm0n09YzrzMS6thHoJX3kRx2_IJZ4_UgbhgcRluKI2-W1hqiyI4/exec", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ TXN_ID: id, STATUS: status })
+    });
+
+    openAdminDirect();  // Table refresh
   })
   .catch(err => {
     console.error("❌ SheetDB update failed:", err);
   });
 }
+
 
 
 
@@ -1165,6 +1222,41 @@ window.addEventListener("DOMContentLoaded", function () {
   }
 });
 </script>
+<script>
+window.addEventListener("DOMContentLoaded", function () {
+  const sscYear = document.getElementById("ssc_year");
+  for (let y = 1995; y <= 2025; y++) {
+    let opt = new Option(y, y);
+    sscYear.appendChild(opt);
+  }
+});
+</script>
+<script>
+document.getElementById("is-girl").addEventListener("change", function () {
+  const girl = this.checked;
+  const boy = document.getElementById("is-boy");
+
+  if (girl) {
+    boy.checked = false;
+    document.getElementById("with-husband-box").style.display = "block";
+  } else {
+    document.getElementById("with-husband-box").style.display = "none";
+  }
+});
+
+document.getElementById("is-boy").addEventListener("change", function () {
+  const boy = this.checked;
+  const girl = document.getElementById("is-girl");
+
+  if (boy) {
+    girl.checked = false;
+    document.getElementById("with-husband-box").style.display = "none";
+    document.getElementById("with-husband").checked = false;
+  }
+});
+</script>
+
+<button id="adminLoginBtn" onclick="document.getElementById('adminModal').style.display='block'" style="position: fixed; top: 10px; right: 10px; padding: 6px 10px; font-size: 18px; background: #333; color: #fff; border-radius: 50%; border: none; cursor: pointer; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;" title="Admin Access">🔒</button>
 
 </body>
 </html>
