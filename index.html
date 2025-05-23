@@ -1184,7 +1184,7 @@ function updateTotals() {
     const statusText = tr.querySelector('.status-label')?.textContent.toLowerCase();
     if (statusText === 'approved') {
       const participants = parseInt(tr.children[4].textContent) || 0;
-      const totalFeeRow = parseInt(tr.children[11].textContent) || 0;
+      const totalFeeRow = parseInt(tr.children[12].textContent) || 0;
       const child = parseInt(tr.children[5].textContent) || 0;
       const under5 = parseInt(tr.children[6].textContent) || 0;
 
