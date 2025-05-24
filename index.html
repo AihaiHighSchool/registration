@@ -9,6 +9,30 @@
 
 
   <style>
+    
+    .modal-close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 28px;
+  font-weight: bold;
+  color: #cc0000;
+  cursor: pointer;
+  z-index: 9999;
+  padding: 5px 10px;
+  line-height: 1;
+}
+
+/* মোবাইল স্ক্রীনের জন্য আলাদা ফন্ট ও পজিশন */
+@media (max-width: 480px) {
+  .modal-close {
+    font-size: 32px;
+    top: 6px;
+    right: 10px;
+    padding: 10px;
+  }
+}
+
 input[type="email"] {
   width: 100%;
   padding: 10px;
@@ -465,10 +489,7 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
 <div id="resetModal" class="modal">
   <div class="modal-content" style="position: relative;">
     <!-- ❌ Cross Button -->
-    <span onclick="document.getElementById('resetModal').style.display='none'" 
-          style="position:absolute; top:10px; right:15px; cursor:pointer; font-size:22px; font-weight:bold; color:#cc0000;">
-      &times;
-    </span>
+<span class="modal-close" onclick="document.getElementById('resetModal').style.display='none'">&times;</span>
 
     <h3>🔁 রিসেট পাসওয়ার্ড দিন</h3>
     
