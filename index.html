@@ -955,6 +955,7 @@ function openAdminDirect() {
         <div style='overflow-x:auto;'>
           <table border='1' cellpadding='6' style='width:100%; border-collapse:collapse; min-width:800px'>
             <tr style='background:#f2f2f2'>
+              <th>ক্রমিক</th>
               <th>নাম</th>
               <th>ঠিকানা</th>
               <th>SSC</th>
@@ -971,7 +972,7 @@ function openAdminDirect() {
               <th>স্টেটাস</th>
             </tr>`;
 
-      data.forEach(row => {
+      data.forEach((row, index) => {
       const id = row.TXN_ID || '';
 const isAdmin = localStorage.getItem("isAdmin") === "true";
 const maskedTxnId = isAdmin ? id : '*******';
@@ -1024,6 +1025,7 @@ if (isAdmin) {
 
         html += `
           <tr data-id="${id}">
+            <td>${index + 1}</td> <!-- ক্রমিক নম্বর -->
             <td>${row.NAME || ''}</td>
             <td>${row.ADDRESS || ''}</td>
             <td>${row.SSC_YEAR || ''}</td>
@@ -1210,10 +1212,10 @@ function updateTotals() {
   document.querySelectorAll('#admin-table table tr[data-id]').forEach(tr => {
     const statusText = tr.querySelector('.status-label')?.textContent.toLowerCase();
     if (statusText === 'approved') {
-      const participants = parseInt(tr.children[4].textContent) || 0;
-      const totalFeeRow = parseInt(tr.children[12].textContent) || 0;
-      const child = parseInt(tr.children[5].textContent) || 0;
-      const under5 = parseInt(tr.children[6].textContent) || 0;
+      const participants = parseInt(tr.children[5].textContent) || 0;
+      const totalFeeRow = parseInt(tr.children[13].textContent) || 0;
+      const child = parseInt(tr.children[6].textContent) || 0;
+      const under5 = parseInt(tr.children[7].textContent) || 0;
 
       totalParticipants += participants;
       totalFee += totalFeeRow;
@@ -1221,13 +1223,24 @@ function updateTotals() {
       totalUnder5 += under5;
     }
   });
+
+  document.getElementById("admin-summary").innerHTML =
+    `✅ মোট অংশগ্রহণকারী: ${totalParticipants} | মোট টাকা: ${totalFee}৳`;
+
+  document.getElementById("extra-summary").innerHTML = `
+    মোট ৫ বছরের বেশি শিশু: ${totalChild} জন |
+    মোট ৫ বছরের নিচে শিশু: ${totalUnder5} জন
+  `;
+
+  updateTShirtSummary();
+}
 function updateTShirtSummary() {
   const sizeCount = { S: 0, M: 0, L: 0, XL: 0, XXL: 0 };
 
   document.querySelectorAll('#admin-table table tr[data-id]').forEach(tr => {
     const statusText = tr.querySelector('.status-label')?.textContent.toLowerCase();
     if (statusText === 'approved') {
-      const size = tr.children[7].textContent.trim();
+      const size = tr.children[8].textContent.trim();
       if (sizeCount[size] !== undefined) {
         sizeCount[size]++;
       }
@@ -1244,20 +1257,6 @@ function updateTShirtSummary() {
   `;
 
   document.getElementById("tshirt-summary").textContent = summaryText;
-}
-
-  // মোট অংশগ্রহণকারী ও টাকা
-  document.getElementById("admin-summary").innerHTML =
-    `✅ মোট অংশগ্রহণকারী: ${totalParticipants} | মোট টাকা: ${totalFee}৳`;
-
-  // মোট শিশু
-  document.getElementById("extra-summary").innerHTML = `
-    মোট ৫ বছরের বেশি শিশু: ${totalChild} জন |
-    মোট ৫ বছরের নিচে শিশু: ${totalUnder5} জন
-  `;
-
-  // টি-শার্ট সাইজ সংক্ষেপ
-  updateTShirtSummary();
 }
 
 
