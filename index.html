@@ -1253,19 +1253,20 @@ btn.addEventListener('click', function () {
 const name = tr.children[0].textContent;
 const email = tr.children[8].textContent;
 const year = tr.children[2].textContent;
+const participants = tr.children[4].textContent;
 
 if (email !== '********' && /\S+@\S+\.\S+/.test(email)) {
   emailjs.send("service_lw53o85", "template_rihu06c", {
     to_name: name,
     to_email: email,
-    batch_year: year
+    batch_year: year,
+    participants: participants
   }).then(() => {
     console.log("✅ Confirmation email sent to", email);
   }).catch(error => {
     console.error("❌ Email sending failed:", error);
   });
 }
-
   updateTotals();
 
   // ✅ Confirm করার পর UI-তে "Approved" দেখানো
