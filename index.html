@@ -526,7 +526,12 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
   <h3 style="text-align:center;">📋 রেজিস্ট্রেশন তালিকা</h3>
   <div id="admin-table" style="overflow-x:auto;"></div>
   <h4 id="admin-summary" style="text-align:center; color:green;"></h4>
-  <div id="tshirt-summary" style="text-align:center; color:blue; font-weight:bold; margin-top:10px;"></div>
+  <!-- টি-শার্ট সারাংশ -->
+<div id="tshirt-summary" style="text-align:center; color:blue; font-weight:bold; margin-top:6px;"></div>
+
+<!-- মোট শিশুদের সংক্ষেপ -->
+<div id="extra-summary" style="text-align:center; color:green; font-weight:bold; margin-top:6px;"></div>
+
 <button onclick="generatePDF()" class="no-print" style="margin: 20px auto; display: block; background: #dc3545; color: white; font-weight: bold; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">
   ⬇️ তালিকা PDF হিসেবে ডাউনলোড করুন
 </button>
@@ -1216,15 +1221,8 @@ function updateTotals() {
       totalUnder5 += under5;
     }
   });
-
-  function updateTShirtSummary() {
-  const sizeCount = {
-    S: 0,
-    M: 0,
-    L: 0,
-    XL: 0,
-    XXL: 0
-  };
+function updateTShirtSummary() {
+  const sizeCount = { S: 0, M: 0, L: 0, XL: 0, XXL: 0 };
 
   document.querySelectorAll('#admin-table table tr[data-id]').forEach(tr => {
     const statusText = tr.querySelector('.status-label')?.textContent.toLowerCase();
@@ -1248,23 +1246,20 @@ function updateTotals() {
   document.getElementById("tshirt-summary").textContent = summaryText;
 }
 
-
+  // মোট অংশগ্রহণকারী ও টাকা
   document.getElementById("admin-summary").innerHTML =
     `✅ মোট অংশগ্রহণকারী: ${totalParticipants} | মোট টাকা: ${totalFee}৳`;
 
-  let extraSummaryDiv = document.querySelector('#admin-panel > div.extra-summary');
-  if (!extraSummaryDiv) {
-    extraSummaryDiv = document.createElement('div');
-    extraSummaryDiv.className = 'extra-summary';
-    extraSummaryDiv.style = "text-align:center; color:green; font-weight:bold; margin-top:10px;";
-    document.getElementById('admin-panel').appendChild(extraSummaryDiv);
-  }
-  extraSummaryDiv.innerHTML = `
-    মোট ৫ বছরের বেশি শিশু: ${totalChild} জন<br>
+  // মোট শিশু
+  document.getElementById("extra-summary").innerHTML = `
+    মোট ৫ বছরের বেশি শিশু: ${totalChild} জন |
     মোট ৫ বছরের নিচে শিশু: ${totalUnder5} জন
   `;
-    updateTShirtSummary();
+
+  // টি-শার্ট সাইজ সংক্ষেপ
+  updateTShirtSummary();
 }
+
 
 
 function setupStatusButtons() {
