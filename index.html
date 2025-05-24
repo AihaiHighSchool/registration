@@ -526,6 +526,7 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
   <h3 style="text-align:center;">📋 রেজিস্ট্রেশন তালিকা</h3>
   <div id="admin-table" style="overflow-x:auto;"></div>
   <h4 id="admin-summary" style="text-align:center; color:green;"></h4>
+  <div id="tshirt-summary" style="text-align:center; color:blue; font-weight:bold; margin-top:10px;"></div>
 <button onclick="generatePDF()" class="no-print" style="margin: 20px auto; display: block; background: #dc3545; color: white; font-weight: bold; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">
   ⬇️ তালিকা PDF হিসেবে ডাউনলোড করুন
 </button>
@@ -807,7 +808,7 @@ function generatePDF() {
     filename: 'registration_list.pdf',
     image: { type: 'jpeg', quality: 1 },
     html2canvas: {
-      scale: 2,
+      scale: 1.5,
       useCORS: true,
       scrollY: 0
     },
@@ -840,11 +841,11 @@ function generatePDF() {
     filename: 'registration_list.pdf',
     image: { type: 'jpeg', quality: 1 },
     html2canvas: {
-      scale: 2,
+      scale: 1.5,
       useCORS: true,
       scrollY: 0
     },
-    jsPDF: { unit: 'in', format: 'A4', orientation: 'landscape' }
+    jsPDF: { unit: 'in', format: 'legal', orientation: 'landscape' }
   };
 
   // 📄 PDF তৈরি করুন
@@ -1216,6 +1217,38 @@ function updateTotals() {
     }
   });
 
+  function updateTShirtSummary() {
+  const sizeCount = {
+    S: 0,
+    M: 0,
+    L: 0,
+    XL: 0,
+    XXL: 0
+  };
+
+  document.querySelectorAll('#admin-table table tr[data-id]').forEach(tr => {
+    const statusText = tr.querySelector('.status-label')?.textContent.toLowerCase();
+    if (statusText === 'approved') {
+      const size = tr.children[7].textContent.trim();
+      if (sizeCount[size] !== undefined) {
+        sizeCount[size]++;
+      }
+    }
+  });
+
+  const summaryText = `
+    👕 টি-শার্ট সাইজ বিতরণ:
+    S: ${sizeCount.S} জন | 
+    M: ${sizeCount.M} জন | 
+    L: ${sizeCount.L} জন | 
+    XL: ${sizeCount.XL} জন | 
+    XXL: ${sizeCount.XXL} জন
+  `;
+
+  document.getElementById("tshirt-summary").textContent = summaryText;
+}
+
+
   document.getElementById("admin-summary").innerHTML =
     `✅ মোট অংশগ্রহণকারী: ${totalParticipants} | মোট টাকা: ${totalFee}৳`;
 
@@ -1230,6 +1263,7 @@ function updateTotals() {
     মোট ৫ বছরের বেশি শিশু: ${totalChild} জন<br>
     মোট ৫ বছরের নিচে শিশু: ${totalUnder5} জন
   `;
+    updateTShirtSummary();
 }
 
 
