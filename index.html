@@ -617,6 +617,21 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
 
 <!-- মোট শিশুদের সংক্ষেপ -->
 <div id="extra-summary" style="text-align:center; color:green; font-weight:bold; margin-top:6px;"></div>
+<!-- SSC Summary -->
+<div id="ssc-summary" style="
+  background: linear-gradient(90deg, #e1f5fe, #ffffff);
+  padding: 16px;
+  border: 2px solid #0288d1;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(2, 136, 209, 0.2);
+  font-size: 18px;
+  font-weight: bold;
+  margin-top: 20px;
+  line-height: 1.8;
+  color: #01579b;
+  text-align: center;">
+</div>
+
 
 <button onclick="generatePDF()" class="no-print" style="margin: 20px auto; display: block; background: #dc3545; color: white; font-weight: bold; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">
   ⬇️ তালিকা PDF হিসেবে ডাউনলোড করুন
@@ -1313,6 +1328,8 @@ function updateTotals() {
   `;
 
   updateTShirtSummary();
+  updateSSCYearSummary();
+
 }
 function updateTShirtSummary() {
   const sizeCount = { S: 0, M: 0, L: 0, XL: 0, XXL: 0 };
@@ -1339,6 +1356,29 @@ function updateTShirtSummary() {
   document.getElementById("tshirt-summary").textContent = summaryText;
 }
 
+function updateSSCYearSummary() {
+  const yearCount = {};
+
+  document.querySelectorAll('#admin-table table tr[data-id]').forEach(tr => {
+    const statusText = tr.querySelector('.status-label')?.textContent.toLowerCase();
+    if (statusText === 'approved') {
+      const year = tr.children[3].textContent.trim(); // 4th column = SSC year
+      if (year) {
+        yearCount[year] = (yearCount[year] || 0) + 1;
+      }
+    }
+  });
+
+  let summaryText = "📘 এসএসসি ব্যাচ বিশ্লেষণ: ";
+  const sortedYears = Object.keys(yearCount).sort();
+
+  summaryText += sortedYears.map(y => `${y}: ${yearCount[y]} জন`).join(" | ");
+
+  const div = document.getElementById("ssc-summary");
+  if (div) {
+    div.textContent = summaryText;
+  }
+}
 
 
 function setupStatusButtons() {
