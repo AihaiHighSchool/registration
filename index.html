@@ -119,15 +119,7 @@
   }
 }
 
-input[type="email"] {
-  width: 100%;
-  padding: 10px;
-  font-size: 16px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: #fff;
-  box-sizing: border-box;
-}
+
 
 #typed-welcome {
   font-size: 30px;
@@ -313,20 +305,44 @@ select:focus {
   outline: none;
 }
 
+/* ✅ Fix form padding and alignment issues on mobile */
 input[type="text"],
-input[type="tel"],
 input[type="email"],
-select {
+input[type="tel"],
+select,
+textarea {
   width: 100%;
-  padding: 14px;
+  box-sizing: border-box;
+  padding: 12px;
   font-size: 16px;
-  margin-top: 6px;
+  border-radius: 6px;
   border: 1px solid #ccc;
-  border-radius: 8px;
-  background: #ffffffdd;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-  transition: border 0.3s, box-shadow 0.3s;
+  margin-bottom: 15px;
 }
+
+/* ✅ Ensure form has enough padding on mobile */
+form {
+  padding: 20px;
+  margin: 15px;
+  box-sizing: border-box;
+}
+
+/* ✅ Mobile-specific adjustment */
+@media (max-width: 480px) {
+  form {
+    padding: 16px;
+    margin: 10px;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  select {
+    font-size: 15px;
+    padding: 10px;
+  }
+}
+
 
 header {
   background-color: rgba(10, 25, 47, 0.95);
