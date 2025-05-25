@@ -1250,13 +1250,7 @@ function saveStatus(id, status) {
     console.log("✅ STATUS updated in SheetDB:", data);
 
     // 📨 Email Automation via Apps Script Web App
-    fetch("https://script.google.com/macros/s/AKfycbykmYRMLdk1erlEJm0n09YzrzMS6thHoJX3kRx2_IJZ4_UgbhgcRluKI2-W1hqiyI4/exec", {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ TXN_ID: id, STATUS: status })
-    });
+
 
     openAdminDirect();  // Table refresh
   })
@@ -1364,10 +1358,12 @@ btn.addEventListener('click', function () {
 
   saveStatus(tr.dataset.id, 'confirmed');
   // ✅ EmailJS: Confirmation ইমেইল পাঠানো
-const name = tr.children[0].textContent;
-const email = tr.children[8].textContent;
-const year = tr.children[2].textContent;
-const participants = tr.children[4].textContent;
+const name = tr.children[1].textContent;
+const email = tr.children[9].textContent;
+const year = tr.children[3].textContent;
+const participants = tr.children[5].textContent;
+
+console.log("📨 Preparing to send email to:", email); // ✅ Debug log
 
 if (email !== '********' && /\S+@\S+\.\S+/.test(email)) {
   emailjs.send("service_lw53o85", "template_rihu06c", {
@@ -1380,7 +1376,10 @@ if (email !== '********' && /\S+@\S+\.\S+/.test(email)) {
   }).catch(error => {
     console.error("❌ Email sending failed:", error);
   });
+} else {
+  console.warn("⚠️ Email masked or invalid:", email);
 }
+
   updateTotals();
 
   // ✅ Confirm করার পর UI-তে "Approved" দেখানো
