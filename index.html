@@ -236,16 +236,29 @@ input[type="email"] {
       cursor: pointer;
       margin-top: 30px;
     }
+
+input[type="checkbox"] {
+  accent-color: #009688;
+  transform: scale(1.2);
+  margin-right: 6px;
+}
+
+
 #registration-form {
-  max-width: 500px;
+  max-width: 550px;
   margin: 40px auto;
   padding: 30px;
-  background: white;
-  border-radius: 12px;
-  animation: blinkGlow 2s infinite alternate; /* <-- এখানে ধীর করা হয়েছে */
-  box-shadow: 0 0 0 transparent;
-  transition: box-shadow 0.3s ease-in-out;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease-in-out;
+  border: 2px solid #cfd8dc;
+  
+  /* 🔄 Add animation back */
+  animation: blinkGlow 2s infinite alternate;
 }
+
 
 @keyframes blinkGlow {
   0% {
@@ -279,6 +292,42 @@ input[type="email"] {
       0 0 25px #002bff;
   }
 }
+input[type="submit"] {
+  background: linear-gradient(90deg, #43cea2, #185a9d);
+  color: white;
+  padding: 14px;
+  font-size: 18px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+input[type="text"]:focus,
+input[type="tel"]:focus,
+input[type="email"]:focus,
+select:focus {
+  border-color: #00bcd4;
+  box-shadow: 0 0 6px rgba(0, 188, 212, 0.5);
+  outline: none;
+}
+
+input[type="text"],
+input[type="tel"],
+input[type="email"],
+select {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  margin-top: 6px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #ffffffdd;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+  transition: border 0.3s, box-shadow 0.3s;
+}
+
 header {
   background-color: rgba(10, 25, 47, 0.95);
   border-bottom: 4px solid #ffffffaa;
@@ -454,7 +503,7 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
 <!-- ছাত্র-ছাত্রী নির্বাচন (একই লাইনে পাশে পাশে) -->
 <div style="margin-bottom: 15px; display: flex; gap: 20px; align-items: center;">
  
-<input type="checkbox" id="is-boy"> ছাত্র
+<input type="checkbox" id="is-boy">ছাত্র
 <input type="checkbox" id="is-girl"> ছাত্রী
 
 </div>
