@@ -515,7 +515,7 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
 </div>
 
 
-<form id="registration-form" action="https://sheetdb.io/api/v1/c6mvnrrde4hg7" method="post">
+<form id="registration-form" action="https://sheetdb.io/api/v1/j8j1z8w5qtc1h" method="post">
 <!-- ছাত্র-ছাত্রী নির্বাচন (একই লাইনে পাশে পাশে) -->
 <div style="margin-bottom: 15px; display: flex; gap: 20px; align-items: center;">
  
@@ -571,6 +571,10 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
  <!-- ✅ ৫ বছরের বেশি শিশু -->
 <div id="with-husband-box" style="margin-top: 20px; display: none;">
   <label><input type="checkbox" id="with-husband"> স্বামী সহ</label>
+</div>
+<!-- ✅ স্ত্রী সহ অপশন (শুধু ছাত্রদের জন্য) -->
+<div id="with-wife-box" style="margin-top: 20px; display: none;">
+  <label><input type="checkbox" id="with-wife"> স্ত্রী সহ</label>
 </div>
 
 
@@ -754,6 +758,8 @@ document.getElementById("has-child").addEventListener("change", function () {
 
 under5Checkbox.addEventListener("change", function () {
   const withHusband = document.getElementById("with-husband").checked;
+  const withWife = document.getElementById("with-wife").checked;
+
   const hasChild = document.getElementById("has-child").checked;
   const childCount = hasChild ? parseInt(document.getElementById("child-count").value || "0") : 0;
 
@@ -792,6 +798,8 @@ function updateFee() {
   const year = parseInt(document.getElementById("ssc_year").value);
   const isRunning = document.getElementById("running-student").checked;
   const withHusband = document.getElementById("with-husband").checked;
+  const withWife = document.getElementById("with-wife")?.checked || false; // ✅ এখানে সমস্যা ছিল
+
   const hasChild = document.getElementById("has-child").checked;
   const hasUnder5 = document.getElementById("has-under5").checked;
 
@@ -800,20 +808,18 @@ function updateFee() {
 
   let baseFee = 0;
   if (isRunning) {
-    baseFee = 200;
+    baseFee = 250;
   } else if (!isNaN(year)) {
     baseFee = (year >= 1995 && year <= 2016) ? 350 : 250;
   }
 
-  const husbandExtra = withHusband ? baseFee : 0;
-  const total = baseFee + husbandExtra + (childCount * 200);
-  const totalParticipants = 1 + (withHusband ? 1 : 0) + childCount + under5Count;
+  const spouseExtra = (withHusband || withWife) ? baseFee : 0;
+  const total = baseFee + spouseExtra + (childCount * 200);
+  const totalParticipants = 1 + (withHusband || withWife ? 1 : 0) + childCount + under5Count;
 
-  // Show in UI
   document.getElementById("display_fee").value = total;
   document.getElementById("total_fee_input").value = total;
 
-  // Hidden inputs create/update
   const addOrUpdateHidden = (name, value) => {
     let input = document.querySelector(`input[name='data[${name}]']`);
     if (!input) {
@@ -828,7 +834,6 @@ function updateFee() {
   addOrUpdateHidden("PARTICIPANTS", totalParticipants);
   addOrUpdateHidden("TOTAL_FEE", total);
 }
-
 
 
 
@@ -869,7 +874,7 @@ form.onsubmit = async function (e) {
 
   // 🛑 একই Transaction ID চেক
   try {
-    const existingTxnCheck = await fetch("https://sheetdb.io/api/v1/c6mvnrrde4hg7/search?TXN_ID=" + txn);
+    const existingTxnCheck = await fetch("https://sheetdb.io/api/v1/j8j1z8w5qtc1h/search?TXN_ID=" + txn);
     const existingTxnData = await existingTxnCheck.json();
 
     if (existingTxnData.length > 0) {
@@ -1116,7 +1121,7 @@ setInterval(createBubble, 300);
 function openAdminDirect() {
   document.getElementById("loading-box").style.display = "block";
 
-  fetch("https://sheetdb.io/api/v1/c6mvnrrde4hg7")
+  fetch("https://sheetdb.io/api/v1/j8j1z8w5qtc1h")
     .then(res => res.json())
     .then(data => {
   let isAdmin;
@@ -1253,6 +1258,8 @@ document.getElementById("has-under5").addEventListener("change", function () {
   updateFee();
 });
 document.getElementById("with-husband").addEventListener("change", updateFee);
+document.getElementById("with-wife").addEventListener("change", updateFee);
+
 
 // যখন সংখ্যা পরিবর্তন হবে
 document.getElementById("child-count").addEventListener("change", updateFee);
@@ -1324,7 +1331,7 @@ agentNumberDiv.innerHTML = `<img src="${agents[selected].logo}" alt="${selected}
 
 <script>
 function saveStatus(id, status) {
-  fetch(`https://sheetdb.io/api/v1/c6mvnrrde4hg7/TXN_ID/${id}`, {
+  fetch(`https://sheetdb.io/api/v1/j8j1z8w5qtc1h/TXN_ID/${id}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json'
@@ -1550,10 +1557,17 @@ document.getElementById("is-girl").addEventListener("change", function () {
   if (girl) {
     boy.checked = false;
     document.getElementById("with-husband-box").style.display = "block";
+
+    document.getElementById("with-wife-box").style.display = "none";
+    document.getElementById("with-wife").checked = false;
   } else {
     document.getElementById("with-husband-box").style.display = "none";
+    document.getElementById("with-husband").checked = false;
   }
+
+  updateFee(); // ✅ add this here
 });
+
 
 document.getElementById("is-boy").addEventListener("change", function () {
   const boy = this.checked;
@@ -1563,8 +1577,17 @@ document.getElementById("is-boy").addEventListener("change", function () {
     girl.checked = false;
     document.getElementById("with-husband-box").style.display = "none";
     document.getElementById("with-husband").checked = false;
+
+    document.getElementById("with-wife-box").style.display = "block";
+  } else {
+    document.getElementById("with-wife-box").style.display = "none";
+    document.getElementById("with-wife").checked = false;
   }
+
+  updateFee(); // ✅ add this here
 });
+
+
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
