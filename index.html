@@ -618,7 +618,9 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
   <option value="">-- মাধ্যম নির্বাচন করুন --</option>
   <option value="Bkash">Bkash</option>
   <option value="Nagad">Nagad</option>
+  <option value="Rocket">Rocket</option>
 </select>
+
 
 <div id="agent-number" style="margin-top: 8px; font-weight: bold; display: none;">
   <!-- এখানে নম্বর ও লোগো দেখানো হবে -->
@@ -1306,16 +1308,20 @@ function getStatusColor(txnId) {
   const cashOutSelect = document.getElementById('cash_out_method');
   const agentNumberDiv = document.getElementById('agent-number');
 
-  const agents = {
-    Bkash: {
-      number: '01729-436399',
-      logo: 'https://i.postimg.cc/QxDFmXXf/1.png'
-    },
-    Nagad: {
-      number: '01729-436399',
-      logo: 'https://i.postimg.cc/MZVc1c8c/unnamed.png'
-    }
-  };
+const agents = {
+  Bkash: {
+    number: '01729-436399',
+    logo: 'https://i.postimg.cc/yYWtZnx9/Bkash-logo.png'
+  },
+  Nagad: {
+    number: '01729-436399',
+    logo: 'https://i.postimg.cc/MZVc1c8c/unnamed.png'
+  },
+  Rocket: {
+    number: '017816876613',
+    logo: 'https://i.postimg.cc/4dVNsskf/DBBL-Mobile-Banking-Becomes-Rocket.jpg'
+  }
+};
 
   cashOutSelect.addEventListener('change', function() {
     const selected = this.value;
