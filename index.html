@@ -515,7 +515,7 @@ box-shadow: 0 0 20px rgba(0,0,0,0.3); display:none;">
 </div>
 
 
-<form id="registration-form" action="https://sheetdb.io/api/v1/ufy2rmfgr9mu3" method="post">
+<form id="registration-form" action="https://sheetdb.io/api/v1/q577ahfaiu7ty" method="post">
 <!-- ছাত্র-ছাত্রী নির্বাচন (একই লাইনে পাশে পাশে) -->
 <div style="margin-bottom: 15px; display: flex; gap: 20px; align-items: center;">
  
@@ -876,7 +876,7 @@ form.onsubmit = async function (e) {
 
   // 🛑 একই Transaction ID চেক
   try {
-    const existingTxnCheck = await fetch("https://sheetdb.io/api/v1/ufy2rmfgr9mu3/search?TXN_ID=" + txn);
+    const existingTxnCheck = await fetch("https://sheetdb.io/api/v1/q577ahfaiu7ty/search?TXN_ID=" + txn);
     const existingTxnData = await existingTxnCheck.json();
 
     if (existingTxnData.length > 0) {
@@ -1123,7 +1123,7 @@ setInterval(createBubble, 300);
 function openAdminDirect() {
   document.getElementById("loading-box").style.display = "block";
 
-  fetch("https://sheetdb.io/api/v1/ufy2rmfgr9mu3")
+  fetch("https://sheetdb.io/api/v1/q577ahfaiu7ty")
     .then(res => res.json())
     .then(data => {
   let isAdmin;
@@ -1337,7 +1337,7 @@ agentNumberDiv.innerHTML = `<img src="${agents[selected].logo}" alt="${selected}
 
 <script>
 function saveStatus(id, status) {
-  fetch(`https://sheetdb.io/api/v1/ufy2rmfgr9mu3/TXN_ID/${id}`, {
+  fetch(`https://sheetdb.io/api/v1/q577ahfaiu7ty/TXN_ID/${id}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json'
